@@ -1,0 +1,6 @@
+rootProject.name = 'neurixa'
+
+include 'neurixa-core'
+include 'neurixa-adapter'
+include 'neurixa-config'
+include 'neurixa-boot'

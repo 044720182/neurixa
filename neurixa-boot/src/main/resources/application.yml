@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: neurixa
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/neurixa
+    redis:
+      host: localhost
+      port: 6379
+
+jwt:
+  secret: neurixa-secret-key-change-in-production-minimum-256-bits
+  validity: 3600000
+
+server:
+  port: 8080

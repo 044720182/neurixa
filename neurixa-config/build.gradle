@@ -1,0 +1,19 @@
+apply plugin: 'io.spring.dependency-management'
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:${libs.versions.springBoot.get()}"
+    }
+}
+
+dependencies {
+    implementation libs.spring.boot.starter.security
+    implementation libs.spring.boot.starter.web
+    implementation libs.jjwt.api
+    runtimeOnly libs.jjwt.impl
+    runtimeOnly libs.jjwt.jackson
+    
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    testImplementation libs.spring.boot.starter.test
+}
