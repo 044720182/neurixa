@@ -2,6 +2,7 @@ package com.neurixa.configuration;
 
 import com.neurixa.core.port.PasswordEncoder;
 import com.neurixa.core.port.UserRepository;
+import com.neurixa.core.usecase.GetUserByUsernameUseCase;
 import com.neurixa.core.usecase.LoginUserUseCase;
 import com.neurixa.core.usecase.RegisterUserUseCase;
 import org.springframework.context.annotation.Bean;
@@ -22,5 +23,11 @@ public class UseCaseConfiguration {
             UserRepository userRepository,
             PasswordEncoder passwordEncoder) {
         return new LoginUserUseCase(userRepository, passwordEncoder);
+    }
+
+    @Bean
+    public GetUserByUsernameUseCase getUserByUsernameUseCase(
+            UserRepository userRepository) {
+        return new GetUserByUsernameUseCase(userRepository);
     }
 }
