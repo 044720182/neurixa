@@ -79,6 +79,10 @@ public class JwtTokenProvider {
         }
     }
 
+    public Date getExpiration(String token) {
+        return getClaims(token).getExpiration();
+    }
+
     private Claims getClaims(String token) {
         return Jwts.parser()
                 .verifyWith(key)
@@ -87,4 +91,3 @@ public class JwtTokenProvider {
                 .getPayload();
     }
 }
-

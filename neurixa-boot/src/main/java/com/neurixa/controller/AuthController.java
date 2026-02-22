@@ -1,6 +1,7 @@
 package com.neurixa.controller;
 
 import com.neurixa.config.security.JwtTokenProvider;
+import com.neurixa.config.security.TokenBlacklistService;
 import com.neurixa.core.domain.User;
 import com.neurixa.core.usecase.LoginUserUseCase;
 import com.neurixa.core.usecase.RegisterUserUseCase;
@@ -9,6 +10,7 @@ import com.neurixa.dto.request.RegisterRequest;
 import com.neurixa.dto.response.AuthResponse;
 import com.neurixa.dto.response.MessageResponse;
 import com.neurixa.dto.response.UserResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Date;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ public class AuthController {
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUserUseCase loginUserUseCase;
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -62,10 +67,21 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<MessageResponse> logout() {
-        // Stateless JWT - no server-side session to invalidate
-        // Client should discard the token
-        // In production, consider token blacklisting with Redis
+    public ResponseEntity<MessageResponse> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse("Missing or invalid Authorization header"));
+        }
+
+        String token = authHeader.substring(7);
+        if (!jwtTokenProvider.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse("Invalid or expired token"));
+        }
+
+        Date expiration = jwtTokenProvider.getExpiration(token);
+        tokenBlacklistService.blacklist(token, expiration);
         return ResponseEntity.ok(new MessageResponse("Logged out successfully"));
     }
 

@@ -19,6 +19,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider tokenProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -27,18 +28,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String token = resolveToken(request);
 
-            // Only set authentication if not already present and token is valid
-            if (token != null && tokenProvider.validateToken(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
-                String username = tokenProvider.getUsername(token);
-                String role = tokenProvider.getRole(token);
-                
-                // Create authority with ROLE_ prefix
-                SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
-                
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(username, null, Collections.singletonList(authority));
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+            // Only set authentication if not already present, token is valid, and not blacklisted
+            if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (!tokenBlacklistService.isBlacklisted(token) && tokenProvider.validateToken(token)) {
+                    String username = tokenProvider.getUsername(token);
+                    String role = tokenProvider.getRole(token);
+
+                    // Create authority with ROLE_ prefix
+                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(username, null, Collections.singletonList(authority));
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
         } catch (Exception e) {
             // Do not log sensitive token data
