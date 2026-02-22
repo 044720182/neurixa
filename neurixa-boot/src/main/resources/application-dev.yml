@@ -1,0 +1,24 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/neurixa
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
+jwt:
+  secret: neurixa-dev-secret-key-minimum-256-bits-for-development-only-change-in-production
+  validity: 3600000
+
+logging:
+  level:
+    com.neurixa: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,beans
+  endpoint:
+    health:
+      show-details: always

@@ -5,12 +5,29 @@ spring:
     mongodb:
       uri: mongodb://localhost:27017/neurixa
     redis:
-      host: localhost
+      host: 127.0.0.1
       port: 6379
 
 jwt:
-  secret: neurixa-secret-key-change-in-production-minimum-256-bits
+  secret: ${JWT_SECRET:}
   validity: 3600000
 
 server:
   port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    mongo:
+      enabled: true
+    redis:
+      enabled: true
