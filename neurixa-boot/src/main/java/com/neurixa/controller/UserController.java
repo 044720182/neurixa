@@ -4,12 +4,13 @@ import com.neurixa.core.domain.User;
 import com.neurixa.core.usecase.GetUserByUsernameUseCase;
 import com.neurixa.dto.response.UserResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
-import java.security.Principal;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/users")

@@ -5,19 +5,15 @@ import com.neurixa.core.exception.InvalidCredentialsException;
 import com.neurixa.core.port.PasswordEncoder;
 import com.neurixa.core.port.UserRepository;
 
+import java.util.Objects;
+
 public class LoginUserUseCase {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     public LoginUserUseCase(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        if (userRepository == null) {
-            throw new IllegalArgumentException("UserRepository cannot be null");
-        }
-        if (passwordEncoder == null) {
-            throw new IllegalArgumentException("PasswordEncoder cannot be null");
-        }
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.userRepository = Objects.requireNonNull(userRepository, "UserRepository cannot be null");
+        this.passwordEncoder = Objects.requireNonNull(passwordEncoder, "PasswordEncoder cannot be null");
     }
 
     public User execute(String username, String rawPassword) {

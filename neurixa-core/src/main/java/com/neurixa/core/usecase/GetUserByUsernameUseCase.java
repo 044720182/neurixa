@@ -10,7 +10,7 @@ public class GetUserByUsernameUseCase {
     private final UserRepository userRepository;
 
     public GetUserByUsernameUseCase(UserRepository userRepository) {
-        this.userRepository = Objects.requireNonNull(userRepository);
+        this.userRepository = Objects.requireNonNull(userRepository, "UserRepository cannot be null");
     }
 
     public User execute(String username) {
