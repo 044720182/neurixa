@@ -33,11 +33,13 @@ public class User {
         }
     }
 
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+
     private void validateEmail(String email) {
         if (email == null || email.isBlank()) {
             throw new InvalidUserStateException("Email cannot be null or blank");
         }
-        if (!email.contains("@")) {
+        if (!email.matches(EMAIL_REGEX)) {
             throw new InvalidUserStateException("Email must be valid");
         }
     }

@@ -52,6 +52,14 @@ class UserTest {
         assertThatThrownBy(() -> new User("1", "john_doe", "invalid-email", "hashedPassword", "USER"))
                 .isInstanceOf(InvalidUserStateException.class)
                 .hasMessageContaining("Email must be valid");
+
+        assertThatThrownBy(() -> new User("1", "john_doe", "john@com", "hashedPassword", "USER"))
+                .isInstanceOf(InvalidUserStateException.class)
+                .hasMessageContaining("Email must be valid");
+
+        assertThatThrownBy(() -> new User("1", "john_doe", "john@.com", "hashedPassword", "USER"))
+                .isInstanceOf(InvalidUserStateException.class)
+                .hasMessageContaining("Email must be valid");
     }
 
     @Test
