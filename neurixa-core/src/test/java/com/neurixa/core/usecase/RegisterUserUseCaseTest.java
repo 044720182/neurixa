@@ -73,14 +73,14 @@ class RegisterUserUseCaseTest {
     @Test
     void shouldThrowExceptionWhenRepositoryIsNull() {
         assertThatThrownBy(() -> new RegisterUserUseCase(null, passwordEncoder))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("UserRepository cannot be null");
     }
 
     @Test
     void shouldThrowExceptionWhenPasswordEncoderIsNull() {
         assertThatThrownBy(() -> new RegisterUserUseCase(userRepository, null))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("PasswordEncoder cannot be null");
     }
 }

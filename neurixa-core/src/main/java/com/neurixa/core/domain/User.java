@@ -3,8 +3,12 @@ package com.neurixa.core.domain;
 import com.neurixa.core.exception.InvalidUserStateException;
 
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class User {
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile("^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$");
+
     private final String id;
     private final String username;
     private final String email;
@@ -37,7 +41,7 @@ public class User {
         if (email == null || email.isBlank()) {
             throw new InvalidUserStateException("Email cannot be null or blank");
         }
-        if (!email.contains("@")) {
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
             throw new InvalidUserStateException("Email must be valid");
         }
     }
