@@ -26,7 +26,7 @@ public class UserController {
         String username = principal.getName();
         User user = getUserByUsernameUseCase.execute(username);
         UserResponse response = new UserResponse(
-                user.getId(),
+                user.getId().getValue(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getRole()

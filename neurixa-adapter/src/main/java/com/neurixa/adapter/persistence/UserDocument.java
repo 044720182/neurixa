@@ -1,11 +1,14 @@
 package com.neurixa.adapter.persistence;
 
+import com.neurixa.core.domain.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.Instant;
 
 @Data
 @Builder
@@ -18,5 +21,10 @@ public class UserDocument {
     private String username;
     private String email;
     private String password;
-    private String role;
+    private Role role;
+    private boolean locked;
+    private boolean emailVerified;
+    private int failedLoginAttempts;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

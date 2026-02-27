@@ -1,5 +1,6 @@
 package com.neurixa.config.security;
 
+import com.neurixa.core.domain.Role;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,32 +25,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        
+
         try {
             String token = resolveToken(request);
 
-            // Only set authentication if not already present, token is valid, and not blacklisted
             if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (!tokenBlacklistService.isBlacklisted(token) && tokenProvider.validateToken(token)) {
                     String username = tokenProvider.getUsername(token);
-                    String role = tokenProvider.getRole(token);
+                    Role role = tokenProvider.getRole(token);
 
-                    // Create authority with ROLE_ prefix
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
-
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(username, null, Collections.singletonList(authority));
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    if (role != null) {
+                        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role.name());
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(username, null, Collections.singletonList(authority));
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
                 }
             }
         } catch (Exception e) {
-            // Do not log sensitive token data
-            // Clear security context on any error
             SecurityContextHolder.clearContext();
         }
 
-        // Always continue filter chain
         filterChain.doFilter(request, response);
     }
 

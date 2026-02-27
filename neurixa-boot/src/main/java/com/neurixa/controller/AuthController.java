@@ -1,13 +1,13 @@
 package com.neurixa.controller;
 
-import com.neurixa.config.security.JwtTokenProvider;
-import com.neurixa.config.security.TokenBlacklistService;
 import com.neurixa.core.domain.User;
 import com.neurixa.core.usecase.LoginUserUseCase;
 import com.neurixa.core.usecase.RegisterUserUseCase;
+import com.neurixa.config.security.JwtTokenProvider;
+import com.neurixa.config.security.TokenBlacklistService;
 import com.neurixa.dto.request.LoginRequest;
 import com.neurixa.dto.request.RegisterRequest;
-import com.neurixa.dto.response.AuthResponse;
+import com.neurixa.dto.response.LoginResponse;
 import com.neurixa.dto.response.MessageResponse;
 import com.neurixa.dto.response.UserResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,38 +32,17 @@ public class AuthController {
     private final TokenBlacklistService tokenBlacklistService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        // Invoke use case (business logic in core)
-        User user = registerUserUseCase.execute(
-                request.username(),
-                request.email(),
-                request.password(),
-                "USER"  // Default role
-        );
-
-        // Generate JWT token after successful registration
-        String token = jwtTokenProvider.createToken(user.getUsername(), user.getRole());
-
-        // Convert domain to DTO
-        UserResponse userResponse = toUserResponse(user);
-        AuthResponse response = new AuthResponse(token, userResponse);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<LoginResponse> register(@Valid @RequestBody RegisterRequest request) {
+        User user = registerUserUseCase.execute(request.username(), request.email(), request.password());
+        String token = jwtTokenProvider.createToken(user.getUsername(), user.getRole().name());
+        return ResponseEntity.status(HttpStatus.CREATED).body(new LoginResponse(token, "Bearer", toUserResponse(user)));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        // Invoke use case (business logic in core)
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         User user = loginUserUseCase.execute(request.username(), request.password());
-
-        // Generate JWT token after successful authentication
-        String token = jwtTokenProvider.createToken(user.getUsername(), user.getRole());
-
-        // Convert domain to DTO
-        UserResponse userResponse = toUserResponse(user);
-        AuthResponse response = new AuthResponse(token, userResponse);
-
-        return ResponseEntity.ok(response);
+        String token = jwtTokenProvider.createToken(user.getUsername(), user.getRole().name());
+        return ResponseEntity.ok(new LoginResponse(token, "Bearer", toUserResponse(user)));
     }
 
     @PostMapping("/logout")
@@ -87,7 +66,7 @@ public class AuthController {
 
     private UserResponse toUserResponse(User user) {
         return new UserResponse(
-                user.getId(),
+                user.getId().getValue(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getRole()

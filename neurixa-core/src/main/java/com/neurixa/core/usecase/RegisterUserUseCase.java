@@ -1,5 +1,6 @@
 package com.neurixa.core.usecase;
 
+import com.neurixa.core.domain.Role;
 import com.neurixa.core.domain.User;
 import com.neurixa.core.exception.UserAlreadyExistsException;
 import com.neurixa.core.port.PasswordEncoder;
@@ -16,16 +17,19 @@ public class RegisterUserUseCase {
         this.passwordEncoder = Objects.requireNonNull(passwordEncoder, "PasswordEncoder cannot be null");
     }
 
-    public User execute(String username, String email, String rawPassword, String role) {
-        if (userRepository.findByUsername(username).isPresent()) {
-            throw new UserAlreadyExistsException("Username already exists: " + username);
-        }
-        if (userRepository.findByEmail(email).isPresent()) {
-            throw new UserAlreadyExistsException("Email already exists: " + email);
-        }
+    public User execute(String username, String email, String rawPassword) {
+        userRepository.findByUsername(username).ifPresent(u -> {
+            throw new UserAlreadyExistsException(UserAlreadyExistsException.Field.USERNAME,
+                    "Username already exists: " + username);
+        });
+
+        userRepository.findByEmail(email).ifPresent(u -> {
+            throw new UserAlreadyExistsException(UserAlreadyExistsException.Field.EMAIL,
+                    "Email already exists: " + email);
+        });
 
         String passwordHash = passwordEncoder.encode(rawPassword);
-        User user = new User(null, username, email, passwordHash, role);
-        return userRepository.save(user);
+        User newUser = User.createNew(username, email, passwordHash, Role.USER);
+        return userRepository.save(newUser);
     }
 }

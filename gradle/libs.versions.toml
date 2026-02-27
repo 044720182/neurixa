@@ -10,7 +10,8 @@ junit = "5.10.1"
 assertj = "3.25.1"
 mockito = "5.8.0"
 
-[libraries]
+[librarie s]
+springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version = "2.3.0" }
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "springBoot" }
 spring-boot-starter-thymeleaf = { module = "org.springframework.boot:spring-boot-starter-thymeleaf", version.ref = "springBoot" }
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "springBoot" }
@@ -31,3 +32,4 @@ mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
 spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }
+

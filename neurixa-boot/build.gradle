@@ -7,10 +7,11 @@ dependencies {
     implementation project(':neurixa-core')
     implementation project(':neurixa-adapter')
     implementation project(':neurixa-config')
-    implementation libs.spring.boot.starter.thymeleaf
+    implementation libs.springdoc.openapi
     implementation libs.spring.boot.starter.web
     implementation libs.spring.boot.starter.actuator
     implementation libs.spring.boot.starter.validation
+    implementation libs.spring.boot.starter.thymeleaf
     
     compileOnly libs.lombok
     annotationProcessor libs.lombok

@@ -1,10 +1,12 @@
 package com.neurixa.adapter.persistence;
 
 import com.neurixa.core.domain.User;
+import com.neurixa.core.domain.UserId;
 import com.neurixa.core.port.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,8 +22,8 @@ public class MongoUserRepository implements UserRepository {
     }
 
     @Override
-    public Optional<User> findById(String id) {
-        return mongoRepository.findById(id).map(this::toDomain);
+    public Optional<User> findById(UserId id) {
+        return mongoRepository.findById(id.getValue()).map(this::toDomain);
     }
 
     @Override
@@ -34,23 +36,43 @@ public class MongoUserRepository implements UserRepository {
         return mongoRepository.findByEmail(email).map(this::toDomain);
     }
 
+    @Override
+    public List<User> findAll() {
+        return mongoRepository.findAll().stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public void deleteById(UserId id) {
+        mongoRepository.deleteById(id.getValue());
+    }
+
     private UserDocument toDocument(User user) {
         return UserDocument.builder()
-                .id(user.getId())
+                .id(user.getId().getValue())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .password(user.getPasswordHash())
                 .role(user.getRole())
+                .locked(user.isLocked())
+                .emailVerified(user.isEmailVerified())
+                .failedLoginAttempts(user.getFailedLoginAttempts())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
                 .build();
     }
 
     private User toDomain(UserDocument document) {
-        return new User(
-                document.getId(),
+        return User.from(
+                new UserId(document.getId()),
                 document.getUsername(),
                 document.getEmail(),
                 document.getPassword(),
-                document.getRole()
+                document.getRole(),
+                document.isLocked(),
+                document.isEmailVerified(),
+                document.getFailedLoginAttempts(),
+                document.getCreatedAt(),
+                document.getUpdatedAt()
         );
     }
 }

@@ -20,8 +20,17 @@ public class LoginUserUseCase {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
+        if (user.isLocked()) {
+            throw new InvalidCredentialsException("Account is locked");
+        }
+
         if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+            userRepository.save(user.recordFailedLogin());
             throw new InvalidCredentialsException("Invalid username or password");
+        }
+
+        if (user.getFailedLoginAttempts() > 0) {
+            user = userRepository.save(user.resetFailedLogin());
         }
 
         return user;
