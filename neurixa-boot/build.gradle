@@ -7,7 +7,7 @@ dependencies {
     implementation project(':neurixa-core')
     implementation project(':neurixa-adapter')
     implementation project(':neurixa-config')
-    implementation libs.springdoc.openapi
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
     implementation libs.spring.boot.starter.web
     implementation libs.spring.boot.starter.actuator
     implementation libs.spring.boot.starter.validation

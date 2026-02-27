@@ -6,6 +6,7 @@ import com.neurixa.core.port.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,7 +63,13 @@ public class MongoUserRepository implements UserRepository {
                 .build();
     }
 
-    private User toDomain(UserDocument document) {
+    // Package-private for testing
+    User toDomain(UserDocument document) {
+        // Handle legacy data where timestamps might be null
+        Instant now = Instant.now();
+        Instant createdAt = document.getCreatedAt() != null ? document.getCreatedAt() : now;
+        Instant updatedAt = document.getUpdatedAt() != null ? document.getUpdatedAt() : now;
+
         return User.from(
                 new UserId(document.getId()),
                 document.getUsername(),
@@ -72,8 +79,8 @@ public class MongoUserRepository implements UserRepository {
                 document.isLocked(),
                 document.isEmailVerified(),
                 document.getFailedLoginAttempts(),
-                document.getCreatedAt(),
-                document.getUpdatedAt()
+                createdAt,
+                updatedAt
         );
     }
 
