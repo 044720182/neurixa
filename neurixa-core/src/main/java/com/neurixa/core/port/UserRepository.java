@@ -1,5 +1,6 @@
 package com.neurixa.core.port;
 
+import com.neurixa.core.domain.Page;
 import com.neurixa.core.domain.User;
 import com.neurixa.core.domain.UserId;
 
@@ -13,4 +14,5 @@ public interface UserRepository {
     Optional<User> findByEmail(String email);
     List<User> findAll();
     void deleteById(UserId id);
+    Page<User> findAllWithFilters(String search, String role, Boolean locked, int page, int size, String sortBy, String sortDirection);
 }

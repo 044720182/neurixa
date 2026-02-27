@@ -53,4 +53,9 @@ public class UseCaseConfiguration {
     public ResetFailedLoginUseCase resetFailedLoginUseCase(UserRepository userRepository) {
         return new ResetFailedLoginUseCase(userRepository);
     }
+
+    @Bean
+    public GetUsersUseCase getUsersUseCase(UserRepository userRepository) {
+        return new GetUsersUseCase(userRepository);
+    }
 }

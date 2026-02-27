@@ -1,5 +1,6 @@
 package com.neurixa.core.usecase;
 
+import com.neurixa.core.domain.Role;
 import com.neurixa.core.domain.User;
 import com.neurixa.core.exception.InvalidCredentialsException;
 import com.neurixa.core.port.PasswordEncoder;
@@ -29,7 +30,7 @@ class LoginUserUseCaseTest {
 
     @Test
     void shouldLoginWithValidCredentials() {
-        User user = new User("1", "john_doe", "john@example.com", "hashedPassword", "USER");
+        User user = User.createNew("john_doe", "john@example.com", "hashedPassword", Role.USER);
         when(userRepository.findByUsername("john_doe")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password", "hashedPassword")).thenReturn(true);
 
@@ -51,7 +52,7 @@ class LoginUserUseCaseTest {
 
     @Test
     void shouldThrowExceptionWhenPasswordIsIncorrect() {
-        User user = new User("1", "john_doe", "john@example.com", "hashedPassword", "USER");
+        User user = User.createNew("john_doe", "john@example.com", "hashedPassword", Role.USER);
         when(userRepository.findByUsername("john_doe")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrongPassword", "hashedPassword")).thenReturn(false);
 

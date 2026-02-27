@@ -13,6 +13,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class MongoUserRepository implements UserRepository {
     private final UserMongoRepository mongoRepository;
+    private final org.springframework.data.mongodb.core.MongoTemplate mongoTemplate;
 
     @Override
     public User save(User user) {
@@ -74,5 +75,51 @@ public class MongoUserRepository implements UserRepository {
                 document.getCreatedAt(),
                 document.getUpdatedAt()
         );
+    }
+
+    @Override
+    public com.neurixa.core.domain.Page<User> findAllWithFilters(
+            String search,
+            String role,
+            Boolean locked,
+            int page,
+            int size,
+            String sortBy,
+            String sortDirection) {
+
+        org.springframework.data.domain.Sort.Direction direction =
+            "desc".equalsIgnoreCase(sortDirection)
+                ? org.springframework.data.domain.Sort.Direction.DESC
+                : org.springframework.data.domain.Sort.Direction.ASC;
+
+        org.springframework.data.domain.Pageable pageable =
+            org.springframework.data.domain.PageRequest.of(page, size, direction, sortBy);
+
+        org.springframework.data.mongodb.core.query.Query query = new org.springframework.data.mongodb.core.query.Query();
+
+        if (search != null && !search.isBlank()) {
+            org.springframework.data.mongodb.core.query.Criteria searchCriteria =
+                new org.springframework.data.mongodb.core.query.Criteria().orOperator(
+                    org.springframework.data.mongodb.core.query.Criteria.where("username").regex(search, "i"),
+                    org.springframework.data.mongodb.core.query.Criteria.where("email").regex(search, "i")
+                );
+            query.addCriteria(searchCriteria);
+        }
+
+        if (role != null && !role.isBlank()) {
+            query.addCriteria(org.springframework.data.mongodb.core.query.Criteria.where("role").is(role));
+        }
+
+        if (locked != null) {
+            query.addCriteria(org.springframework.data.mongodb.core.query.Criteria.where("locked").is(locked));
+        }
+
+        long total = mongoTemplate.count(query, UserDocument.class);
+
+        query.with(pageable);
+        List<UserDocument> documents = mongoTemplate.find(query, UserDocument.class);
+        List<User> users = documents.stream().map(this::toDomain).toList();
+
+        return new com.neurixa.core.domain.Page<>(users, page, size, total);
     }
 }
