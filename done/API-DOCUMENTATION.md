@@ -329,63 +329,7 @@ curl -X GET http://localhost:8080/api/users \
 
 ---
 
-### 6. Delete User
-
-Delete a user by ID (admin only).
-
-**Endpoint:** `DELETE /api/users/{id}`
-
-**Access:** Authenticated
-
-**Success Response (204 No Content):**
-
-**Error Responses:**
-
-**401 Unauthorized** - Missing or invalid token:
-```json
-{
-  "timestamp": "2026-02-22T10:30:00",
-  "status": 401,
-  "error": "Unauthorized",
-  "message": "Missing or invalid JWT token",
-  "path": "/api/users/65f1a2b3c4d5e6f7g8h9i0j1",
-  "details": null
-}
-```
-
-**403 Forbidden** - Insufficient permissions:
-```json
-{
-  "timestamp": "2026-02-22T10:30:00",
-  "status": 403,
-  "error": "Forbidden",
-  "message": "You do not have permission to access this resource",
-  "path": "/api/users/65f1a2b3c4d5e6f7g8h9i0j1",
-  "details": null
-}
-```
-
-**404 Not Found** - User not found:
-```json
-{
-  "timestamp": "2026-02-22T10:30:00",
-  "status": 404,
-  "error": "Not Found",
-  "message": "User not found",
-  "path": "/api/users/65f1a2b3c4d5e6f7g8h9i0j1",
-  "details": null
-}
-```
-
-**cURL Example:**
-```bash
-curl -X DELETE http://localhost:8080/api/users/65f1a2b3c4d5e6f7g8h9i0j1 \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
-
----
-
-### 7. List All Users (Admin)
+### 6. List All Users (Admin)
 
 List all users in the system (admin only).
 
@@ -447,6 +391,63 @@ curl -X GET http://localhost:8080/api/admin/users \
 
 ---
 
+### 7. Get Admin User Profile
+
+Get the current admin user's profile information (admin only).
+
+**Endpoint:** `GET /api/admin/users/me`
+
+**Access:** Admin
+
+**Success Response (200 OK):**
+```json
+{
+  "id": "65f1a2b3c4d5e6f7g8h9i0j1",
+  "username": "admin_user",
+  "email": "admin@example.com",
+  "role": "ADMIN",
+  "locked": false,
+  "emailVerified": true,
+  "failedLoginAttempts": 0,
+  "createdAt": "2026-02-22T10:00:00",
+  "updatedAt": "2026-02-22T10:00:00"
+}
+```
+
+**Error Responses:**
+
+**401 Unauthorized** - Missing or invalid token:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Missing or invalid JWT token",
+  "path": "/api/admin/users/me",
+  "details": null
+}
+```
+
+**403 Forbidden** - Insufficient permissions:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "You do not have permission to access this resource",
+  "path": "/api/admin/users/me",
+  "details": null
+}
+```
+
+**cURL Example:**
+```bash
+curl -X GET http://localhost:8080/api/admin/users/me \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
 ### 8. Update User (Admin)
 
 Update a user's email or role (admin only).
@@ -498,6 +499,18 @@ Update a user's email or role (admin only).
   "status": 404,
   "error": "Not Found",
   "message": "User not found",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1",
+  "details": null
+}
+```
+
+**400 Bad Request** - Session outdated (stale token):
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Your session is outdated. Please login again to refresh your permissions.",
   "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1",
   "details": null
 }
@@ -622,6 +635,18 @@ Change the role of a user (admin only).
   "status": 404,
   "error": "Not Found",
   "message": "User not found",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/role",
+  "details": null
+}
+```
+
+**400 Bad Request** - Session outdated (stale token):
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Your session is outdated. Please login again to refresh your permissions.",
   "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/role",
   "details": null
 }
@@ -1300,6 +1325,7 @@ export REDIS_HOST="prod-redis-server"
 | GET | `/api/users` | Authenticated | List users with pagination |
 | DELETE | `/api/users/{id}` | Authenticated | Delete user (role-based) |
 | GET | `/api/admin/users` | Admin | List all users (admin view) |
+| GET | `/api/admin/users/me` | Admin | Get admin user profile |
 | PUT | `/api/admin/users/{id}` | Admin | Update user email/role |
 | DELETE | `/api/admin/users/{id}` | Admin | Delete user (admin) |
 | PUT | `/api/admin/users/{id}/role` | Admin | Change user role |

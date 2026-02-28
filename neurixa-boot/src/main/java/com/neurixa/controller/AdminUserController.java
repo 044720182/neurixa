@@ -2,6 +2,7 @@ package com.neurixa.controller;
 
 import com.neurixa.core.domain.User;
 import com.neurixa.core.domain.UserId;
+import com.neurixa.core.exception.InvalidUserStateException;
 import com.neurixa.core.usecase.*;
 import com.neurixa.dto.request.ChangeUserRoleRequest;
 import com.neurixa.dto.request.UpdateUserRequest;
@@ -9,7 +10,10 @@ import com.neurixa.dto.response.AdminUserResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -35,6 +39,15 @@ public class AdminUserController {
         List<User> users = listUsersUseCase.execute();
         List<AdminUserResponse> response = users.stream().map(this::toAdminUserResponse).toList();
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<AdminUserResponse> me(Principal principal) {
+        if (principal == null || principal.getName() == null || principal.getName().isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        User user = getUserByUsernameUseCase.execute(principal.getName());
+        return ResponseEntity.ok(toAdminUserResponse(user));
     }
 
     @PutMapping("/{id}")
@@ -74,6 +87,19 @@ public class AdminUserController {
             @Valid @RequestBody ChangeUserRoleRequest request,
             Principal principal) {
         User requestingUser = getUserByUsernameUseCase.execute(principal.getName());
+
+        // Check if token role matches database role to prevent stale token issues
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String tokenRole = auth.getAuthorities().stream()
+                .filter(a -> a.getAuthority().startsWith("ROLE_"))
+                .map(a -> a.getAuthority().substring(5))
+                .findFirst()
+                .orElse(null);
+
+        if (tokenRole == null || !requestingUser.getRole().name().equals(tokenRole)) {
+            throw new InvalidUserStateException("Your session is outdated. Please login again to refresh your permissions.");
+        }
+
         User updatedUser = changeUserRoleUseCase.execute(new UserId(id), request.role(), requestingUser);
         return ResponseEntity.ok(toAdminUserResponse(updatedUser));
     }
