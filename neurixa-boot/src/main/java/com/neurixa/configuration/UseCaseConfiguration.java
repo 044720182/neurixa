@@ -58,4 +58,9 @@ public class UseCaseConfiguration {
     public GetUsersUseCase getUsersUseCase(UserRepository userRepository) {
         return new GetUsersUseCase(userRepository);
     }
+
+    @Bean
+    public ChangeUserRoleUseCase changeUserRoleUseCase(UserRepository userRepository) {
+        return new ChangeUserRoleUseCase(userRepository);
+    }
 }

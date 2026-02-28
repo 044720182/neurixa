@@ -204,6 +204,609 @@ curl -X POST http://localhost:8080/api/auth/logout
 
 ---
 
+### 4. Get Current User Profile
+
+Retrieve the profile of the currently authenticated user.
+
+**Endpoint:** `GET /api/users/me`
+
+**Access:** Authenticated
+
+**Success Response (200 OK):**
+```json
+{
+  "id": "65f1a2b3c4d5e6f7g8h9i0j1",
+  "username": "john_doe",
+  "email": "john@example.com",
+  "role": "USER"
+}
+```
+
+**Error Responses:**
+
+**401 Unauthorized** - Missing or invalid token:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Missing or invalid JWT token",
+  "path": "/api/users/me",
+  "details": null
+}
+```
+
+**cURL Example:**
+```bash
+curl -X GET http://localhost:8080/api/users/me \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
+### 5. List Users
+
+List all users with pagination (admin only).
+
+**Endpoint:** `GET /api/users`
+
+**Access:** Authenticated
+
+**Query Parameters:**
+- `page`: Page number (default: 0)
+- `size`: Page size (default: 10)
+
+**Success Response (200 OK):**
+```json
+{
+  "content": [
+    {
+      "id": "65f1a2b3c4d5e6f7g8h9i0j1",
+      "username": "john_doe",
+      "email": "john@example.com",
+      "role": "USER"
+    },
+    ...
+  ],
+  "pageable": {
+    "sort": {
+      "sorted": true,
+      "unsorted": false,
+      "empty": false
+    },
+    "offset": 0,
+    "pageSize": 10,
+    "pageNumber": 0,
+    "unpaged": false,
+    "paged": true
+  },
+  "totalElements": 50,
+  "totalPages": 5,
+  "last": false,
+  "size": 10,
+  "number": 0,
+  "sort": {
+    "sorted": true,
+    "unsorted": false
+  },
+  "numberOfElements": 10,
+  "first": true,
+  "empty": false
+}
+```
+
+**Error Responses:**
+
+**401 Unauthorized** - Missing or invalid token:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Missing or invalid JWT token",
+  "path": "/api/users",
+  "details": null
+}
+```
+
+**403 Forbidden** - Insufficient permissions:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "You do not have permission to access this resource",
+  "path": "/api/users",
+  "details": null
+}
+```
+
+**cURL Example:**
+```bash
+curl -X GET http://localhost:8080/api/users \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
+### 6. Delete User
+
+Delete a user by ID (admin only).
+
+**Endpoint:** `DELETE /api/users/{id}`
+
+**Access:** Authenticated
+
+**Success Response (204 No Content):**
+
+**Error Responses:**
+
+**401 Unauthorized** - Missing or invalid token:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Missing or invalid JWT token",
+  "path": "/api/users/65f1a2b3c4d5e6f7g8h9i0j1",
+  "details": null
+}
+```
+
+**403 Forbidden** - Insufficient permissions:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "You do not have permission to access this resource",
+  "path": "/api/users/65f1a2b3c4d5e6f7g8h9i0j1",
+  "details": null
+}
+```
+
+**404 Not Found** - User not found:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "User not found",
+  "path": "/api/users/65f1a2b3c4d5e6f7g8h9i0j1",
+  "details": null
+}
+```
+
+**cURL Example:**
+```bash
+curl -X DELETE http://localhost:8080/api/users/65f1a2b3c4d5e6f7g8h9i0j1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
+### 7. List All Users (Admin)
+
+List all users in the system (admin only).
+
+**Endpoint:** `GET /api/admin/users`
+
+**Access:** Admin
+
+**Success Response (200 OK):**
+```json
+{
+  "content": [
+    {
+      "id": "65f1a2b3c4d5e6f7g8h9i0j1",
+      "username": "john_doe",
+      "email": "john@example.com",
+      "role": "USER"
+    },
+    ...
+  ],
+  "totalElements": 50,
+  "totalPages": 5,
+  "last": false,
+  "size": 10,
+  "number": 0
+}
+```
+
+**Error Responses:**
+
+**401 Unauthorized** - Missing or invalid token:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Missing or invalid JWT token",
+  "path": "/api/admin/users",
+  "details": null
+}
+```
+
+**403 Forbidden** - Insufficient permissions:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "You do not have permission to access this resource",
+  "path": "/api/admin/users",
+  "details": null
+}
+```
+
+**cURL Example:**
+```bash
+curl -X GET http://localhost:8080/api/admin/users \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
+### 8. Update User (Admin)
+
+Update a user's email or role (admin only).
+
+**Endpoint:** `PUT /api/admin/users/{id}`
+
+**Access:** Admin
+
+**Request Body:**
+```json
+{
+  "email": "new_email@example.com",
+  "role": "ADMIN"
+}
+```
+
+**Success Response (204 No Content):**
+
+**Error Responses:**
+
+**401 Unauthorized** - Missing or invalid token:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Missing or invalid JWT token",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1",
+  "details": null
+}
+```
+
+**403 Forbidden** - Insufficient permissions:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "You do not have permission to access this resource",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1",
+  "details": null
+}
+```
+
+**404 Not Found** - User not found:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "User not found",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1",
+  "details": null
+}
+```
+
+**cURL Example:**
+```bash
+curl -X PUT http://localhost:8080/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "new_email@example.com",
+    "role": "ADMIN"
+  }'
+```
+
+---
+
+### 9. Delete User (Admin)
+
+Delete a user by ID (admin only).
+
+**Endpoint:** `DELETE /api/admin/users/{id}`
+
+**Access:** Admin
+
+**Success Response (204 No Content):**
+
+**Error Responses:**
+
+**401 Unauthorized** - Missing or invalid token:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Missing or invalid JWT token",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1",
+  "details": null
+}
+```
+
+**403 Forbidden** - Insufficient permissions:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "You do not have permission to access this resource",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1",
+  "details": null
+}
+```
+
+**404 Not Found** - User not found:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "User not found",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1",
+  "details": null
+}
+```
+
+**cURL Example:**
+```bash
+curl -X DELETE http://localhost:8080/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
+### 10. Change User Role
+
+Change the role of a user (admin only).
+
+**Endpoint:** `PUT /api/admin/users/{id}/role`
+
+**Access:** Admin
+
+**Request Body:**
+```json
+{
+  "role": "ADMIN"
+}
+```
+
+**Success Response (204 No Content):**
+
+**Error Responses:**
+
+**401 Unauthorized** - Missing or invalid token:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Missing or invalid JWT token",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/role",
+  "details": null
+}
+```
+
+**403 Forbidden** - Insufficient permissions:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "You do not have permission to access this resource",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/role",
+  "details": null
+}
+```
+
+**404 Not Found** - User not found:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "User not found",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/role",
+  "details": null
+}
+```
+
+**cURL Example:**
+```bash
+curl -X PUT http://localhost:8080/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/role \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "role": "ADMIN"
+  }'
+```
+
+---
+
+### 11. Lock User Account
+
+Lock a user account (admin only).
+
+**Endpoint:** `POST /api/admin/users/{id}/lock`
+
+**Access:** Admin
+
+**Success Response (204 No Content):**
+
+**Error Responses:**
+
+**401 Unauthorized** - Missing or invalid token:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Missing or invalid JWT token",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/lock",
+  "details": null
+}
+```
+
+**403 Forbidden** - Insufficient permissions:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "You do not have permission to access this resource",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/lock",
+  "details": null
+}
+```
+
+**404 Not Found** - User not found:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "User not found",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/lock",
+  "details": null
+}
+```
+
+**cURL Example:**
+```bash
+curl -X POST http://localhost:8080/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/lock \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
+### 12. Unlock User Account
+
+Unlock a user account (admin only).
+
+**Endpoint:** `POST /api/admin/users/{id}/unlock`
+
+**Access:** Admin
+
+**Success Response (204 No Content):**
+
+**Error Responses:**
+
+**401 Unauthorized** - Missing or invalid token:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Missing or invalid JWT token",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/unlock",
+  "details": null
+}
+```
+
+**403 Forbidden** - Insufficient permissions:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "You do not have permission to access this resource",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/unlock",
+  "details": null
+}
+```
+
+**404 Not Found** - User not found:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "User not found",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/unlock",
+  "details": null
+}
+```
+
+**cURL Example:**
+```bash
+curl -X POST http://localhost:8080/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/unlock \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
+### 13. Reset Failed Login Attempts
+
+Reset the failed login attempts for a user (admin only).
+
+**Endpoint:** `POST /api/admin/users/{id}/reset-failed-login`
+
+**Access:** Admin
+
+**Success Response (204 No Content):**
+
+**Error Responses:**
+
+**401 Unauthorized** - Missing or invalid token:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Missing or invalid JWT token",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/reset-failed-login",
+  "details": null
+}
+```
+
+**403 Forbidden** - Insufficient permissions:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "You do not have permission to access this resource",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/reset-failed-login",
+  "details": null
+}
+```
+
+**404 Not Found** - User not found:
+```json
+{
+  "timestamp": "2026-02-22T10:30:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "User not found",
+  "path": "/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/reset-failed-login",
+  "details": null
+}
+```
+
+**cURL Example:**
+```bash
+curl -X POST http://localhost:8080/api/admin/users/65f1a2b3c4d5e6f7g8h9i0j1/reset-failed-login \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
 ## Authentication Flow
 
 ### Step-by-Step Security Flow
@@ -693,6 +1296,16 @@ export REDIS_HOST="prod-redis-server"
 | POST | `/api/auth/register` | Public | Register new user |
 | POST | `/api/auth/login` | Public | Authenticate user |
 | POST | `/api/auth/logout` | Public | Logout (stateless) |
+| GET | `/api/users/me` | Authenticated | Get current user profile |
+| GET | `/api/users` | Authenticated | List users with pagination |
+| DELETE | `/api/users/{id}` | Authenticated | Delete user (role-based) |
+| GET | `/api/admin/users` | Admin | List all users (admin view) |
+| PUT | `/api/admin/users/{id}` | Admin | Update user email/role |
+| DELETE | `/api/admin/users/{id}` | Admin | Delete user (admin) |
+| PUT | `/api/admin/users/{id}/role` | Admin | Change user role |
+| POST | `/api/admin/users/{id}/lock` | Admin | Lock user account |
+| POST | `/api/admin/users/{id}/unlock` | Admin | Unlock user account |
+| POST | `/api/admin/users/{id}/reset-failed-login` | Admin | Reset failed login attempts |
 
 ### Architecture Compliance
 

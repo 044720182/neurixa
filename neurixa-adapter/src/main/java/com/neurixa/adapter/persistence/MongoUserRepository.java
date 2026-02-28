@@ -48,6 +48,14 @@ public class MongoUserRepository implements UserRepository {
         mongoRepository.deleteById(id.getValue());
     }
 
+    @Override
+    public long countByRole(String role) {
+        org.springframework.data.mongodb.core.query.Query query =
+                new org.springframework.data.mongodb.core.query.Query(
+                        org.springframework.data.mongodb.core.query.Criteria.where("role").is(role));
+        return mongoTemplate.count(query, UserDocument.class);
+    }
+
     private UserDocument toDocument(User user) {
         return UserDocument.builder()
                 .id(user.getId().getValue())

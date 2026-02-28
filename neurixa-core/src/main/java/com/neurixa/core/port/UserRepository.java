@@ -14,5 +14,6 @@ public interface UserRepository {
     Optional<User> findByEmail(String email);
     List<User> findAll();
     void deleteById(UserId id);
+    long countByRole(String role);
     Page<User> findAllWithFilters(String search, String role, Boolean locked, int page, int size, String sortBy, String sortDirection);
 }

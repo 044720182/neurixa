@@ -3,6 +3,7 @@ package com.neurixa.controller;
 import com.neurixa.core.domain.User;
 import com.neurixa.core.domain.UserId;
 import com.neurixa.core.usecase.*;
+import com.neurixa.dto.request.ChangeUserRoleRequest;
 import com.neurixa.dto.request.UpdateUserRequest;
 import com.neurixa.dto.response.AdminUserResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -25,6 +27,8 @@ public class AdminUserController {
     private final LockUserUseCase lockUserUseCase;
     private final UnlockUserUseCase unlockUserUseCase;
     private final ResetFailedLoginUseCase resetFailedLoginUseCase;
+    private final GetUserByUsernameUseCase getUserByUsernameUseCase;
+    private final ChangeUserRoleUseCase changeUserRoleUseCase;
 
     @GetMapping
     public ResponseEntity<List<AdminUserResponse>> listUsers() {
@@ -40,8 +44,9 @@ public class AdminUserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
-        deleteUserUseCase.execute(new UserId(id));
+    public ResponseEntity<Void> deleteUser(@PathVariable String id, Principal principal) {
+        User requestingAdmin = getUserByUsernameUseCase.execute(principal.getName());
+        deleteUserUseCase.execute(new UserId(id), requestingAdmin);
         return ResponseEntity.noContent().build();
     }
 
@@ -61,6 +66,16 @@ public class AdminUserController {
     public ResponseEntity<AdminUserResponse> resetFailedLogin(@PathVariable String id) {
         User user = resetFailedLoginUseCase.execute(new UserId(id));
         return ResponseEntity.ok(toAdminUserResponse(user));
+    }
+
+    @PutMapping("/{id}/role")
+    public ResponseEntity<AdminUserResponse> changeUserRole(
+            @PathVariable String id,
+            @Valid @RequestBody ChangeUserRoleRequest request,
+            Principal principal) {
+        User requestingUser = getUserByUsernameUseCase.execute(principal.getName());
+        User updatedUser = changeUserRoleUseCase.execute(new UserId(id), request.role(), requestingUser);
+        return ResponseEntity.ok(toAdminUserResponse(updatedUser));
     }
 
     private AdminUserResponse toAdminUserResponse(User user) {
