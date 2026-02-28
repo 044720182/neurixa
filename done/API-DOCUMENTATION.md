@@ -184,7 +184,7 @@ Logout the current user (stateless - client discards token).
 
 **Endpoint:** `POST /api/auth/logout`
 
-**Access:** Public (no authentication required for stateless logout)
+**Access:** Authenticated (requires a valid JWT in the Authorization header)
 
 **Request Body:** None
 
@@ -253,8 +253,13 @@ List all users with pagination (admin only).
 **Access:** Authenticated
 
 **Query Parameters:**
-- `page`: Page number (default: 0)
-- `size`: Page size (default: 10)
+- `search`: optional string to filter by username or email
+- `role`: optional role filter (`USER`, `ADMIN`, `SUPER_ADMIN`)
+- `locked`: optional boolean to filter locked accounts
+- `page`: page number (default: 0)
+- `size`: page size (default: 10)
+- `sortBy`: field to sort by (default: `createdAt`)
+- `sortDirection`: `asc` or `desc` (default: `desc`)
 
 **Success Response (200 OK):**
 ```json
@@ -1253,6 +1258,12 @@ All exceptions are handled by `GlobalExceptionHandler`:
 | `UserAlreadyExistsException` | 409 Conflict | Username or email already exists |
 | `InvalidCredentialsException` | 401 Unauthorized | Invalid username or password |
 | `InvalidUserStateException` | 400 Bad Request | Domain validation failed |
+
+### Verify
+
+## Documentation
+- API reference: [API‑DOCUMENTATION.md](file:///Users/yusuf.ibrahim/Projects/neurixa/done/API-DOCUMENTATION.md)
+- OpenAPI/Swagger UI (auto‑generated at runtime): `http://localhost:8080/swagger-ui.html`
 
 ### Validation Exceptions
 
