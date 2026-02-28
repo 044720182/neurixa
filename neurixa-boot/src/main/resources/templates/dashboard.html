@@ -2,58 +2,431 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Neurixa Admin Dashboard</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1.25rem;
+            margin: 0.125rem 0;
+            border-radius: 0.375rem;
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+        }
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+            width: 1.25rem;
+        }
+        .sidebar .submenu {
+            padding-left: 2rem;
+        }
+        .sidebar .submenu .nav-link {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+        .main-content {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .card {
+            border: none;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: box-shadow 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .stats-card .card-body {
+            padding: 2rem;
+        }
+        .stats-card h3 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+        .stats-card p {
+            font-size: 0.875rem;
+            opacity: 0.9;
             margin: 0;
         }
-        .dashboard-container {
-            background-color: #1e1e1e;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            width: 400px;
-            text-align: center;
+        .navbar-brand {
+            font-weight: 600;
+            color: #495057 !important;
         }
-        h1 {
-            color: #ffffff;
-            margin-bottom: 24px;
+        .user-info {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
         }
-        p {
-            font-size: 18px;
+        .user-avatar {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 600;
         }
-        button {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            background-color: #dc3545;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 24px;
-        }
-        button:hover {
-            background-color: #c82333;
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -250px;
+                width: 250px;
+                z-index: 1000;
+                transition: left 0.3s ease;
+            }
+            .sidebar.show {
+                left: 0;
+            }
+            .main-content {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <h1>Dashboard</h1>
-        <p id="welcomeMessage"></p>
-        <button id="logoutButton">Logout</button>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="user-info text-center">
+                        <div class="user-avatar mx-auto mb-2">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <h6 class="mb-0" id="userName">Loading...</h6>
+                        <small class="text-muted" id="userRole">User</small>
+                    </div>
+
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#dashboard" onclick="showSection('dashboard')">
+                                <i class="bi bi-house-door"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#users" onclick="toggleSubmenu(this)">
+                                <i class="bi bi-people"></i>
+                                Users
+                                <i class="bi bi-chevron-down float-end"></i>
+                            </a>
+                            <ul class="nav flex-column submenu" style="display: none;">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#users-list" onclick="showSection('users-list')">
+                                        <i class="bi bi-list-ul"></i>
+                                        List Users
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#users-edit" onclick="showSection('users-edit')">
+                                        <i class="bi bi-pencil-square"></i>
+                                        Edit User
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#users-view" onclick="showSection('users-view')">
+                                        <i class="bi bi-eye"></i>
+                                        View User
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#users-delete" onclick="showSection('users-delete')">
+                                        <i class="bi bi-trash"></i>
+                                        Delete User
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#settings" onclick="showSection('settings')">
+                                <i class="bi bi-gear"></i>
+                                Settings
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#reports" onclick="showSection('reports')">
+                                <i class="bi bi-graph-up"></i>
+                                Reports
+                            </a>
+                        </li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <button class="btn btn-outline-light btn-sm w-100" id="logoutButton">
+                            <i class="bi bi-box-arrow-right"></i>
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2" id="pageTitle">Dashboard</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshData()">
+                                <i class="bi bi-arrow-clockwise"></i>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Section -->
+                <div id="dashboard-section" class="content-section">
+                    <div class="row">
+                        <div class="col-md-3 mb-4">
+                            <div class="card stats-card">
+                                <div class="card-body">
+                                    <h3 id="totalUsers">-</h3>
+                                    <p>Total Users</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card stats-card">
+                                <div class="card-body">
+                                    <h3 id="activeUsers">-</h3>
+                                    <p>Active Users</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card stats-card">
+                                <div class="card-body">
+                                    <h3 id="adminUsers">-</h3>
+                                    <p>Admin Users</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card stats-card">
+                                <div class="card-body">
+                                    <h3 id="lockedUsers">-</h3>
+                                    <p>Locked Users</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Recent Activity</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="recentActivity" class="text-muted">
+                                        Loading recent activity...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">System Status</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-circle-fill text-success me-2"></i>
+                                        <span>API Status: Online</span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-circle-fill text-success me-2"></i>
+                                        <span>Database: Connected</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-circle-fill text-warning me-2"></i>
+                                        <span>Cache: Warming up</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users List Section -->
+                <div id="users-list-section" class="content-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Users List</h5>
+                            <button class="btn btn-primary btn-sm" onclick="showSection('users-edit')">
+                                <i class="bi bi-plus-circle"></i>
+                                Add User
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Username</th>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTableBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">Loading users...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Edit Section -->
+                <div id="users-edit-section" class="content-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Edit User</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="userForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="username" class="form-label">Username</label>
+                                        <input type="text" class="form-control" id="username" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="role" class="form-label">Role</label>
+                                        <select class="form-select" id="role" required>
+                                            <option value="USER">User</option>
+                                            <option value="ADMIN">Admin</option>
+                                            <option value="SUPER_ADMIN">Super Admin</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="status" class="form-label">Status</label>
+                                        <select class="form-select" id="status">
+                                            <option value="active">Active</option>
+                                            <option value="locked">Locked</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    <button type="button" class="btn btn-secondary" onclick="showSection('users-list')">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users View Section -->
+                <div id="users-view-section" class="content-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">User Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="userDetails" class="text-muted">
+                                Select a user to view details.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Delete Section -->
+                <div id="users-delete-section" class="content-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Delete User</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="deleteConfirmation" class="text-muted">
+                                Select a user to delete.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settings-section" class="content-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">Settings panel coming soon...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Section -->
+                <div id="reports-section" class="content-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Reports</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">Reports panel coming soon...</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
 
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
+        let currentUser = null;
+        let allUsers = [];
+
+        // Initialize dashboard
         document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserData();
+            await loadDashboardStats();
+            await loadUsersList();
+        });
+
+        // Load current user data
+        async function loadUserData() {
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 window.location.href = '/admin/login';
@@ -61,27 +434,271 @@
             }
 
             try {
-                const response = await fetch('/api/users/me', {
+                const response = await fetch('/api/admin/users/me', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
 
                 if (response.ok) {
-                    const user = await response.json();
-                    document.getElementById('welcomeMessage').textContent = 'Hallo ' + user.username;
-                } else if (response.status === 401) {
+                    currentUser = await response.json();
+                    document.getElementById('userName').textContent = currentUser.username;
+                    document.getElementById('userRole').textContent = currentUser.role;
+                } else if (response.status === 401 || response.status === 403) {
                     localStorage.removeItem('accessToken');
                     window.location.href = '/admin/login';
                 }
             } catch (error) {
-                console.error('Error fetching user data:', error);
+                console.error('Error loading user data:', error);
                 localStorage.removeItem('accessToken');
                 window.location.href = '/admin/login';
             }
-        });
+        }
 
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/admin/users', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (response.ok) {
+                    const users = await response.json();
+                    allUsers = users.content || users;
+
+                    document.getElementById('totalUsers').textContent = allUsers.length;
+                    document.getElementById('activeUsers').textContent = allUsers.filter(u => !u.locked).length;
+                    document.getElementById('adminUsers').textContent = allUsers.filter(u => u.role === 'ADMIN' || u.role === 'SUPER_ADMIN').length;
+                    document.getElementById('lockedUsers').textContent = allUsers.filter(u => u.locked).length;
+                }
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+
+        // Load users list
+        async function loadUsersList() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/admin/users', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    allUsers = data.content || data;
+                    renderUsersTable();
+                }
+            } catch (error) {
+                console.error('Error loading users list:', error);
+            }
+        }
+
+        // Render users table
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+
+            if (allUsers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No users found.</td></tr>';
+                return;
+            }
+
+            allUsers.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td><span class="badge bg-${getRoleBadgeColor(user.role)}">${user.role}</span></td>
+                    <td><span class="badge bg-${user.locked ? 'danger' : 'success'}">${user.locked ? 'Locked' : 'Active'}</span></td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="viewUser('${user.id}')" title="View">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="editUser('${user.id}')" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteUser('${user.id}')" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Helper function for role badge colors
+        function getRoleBadgeColor(role) {
+            switch (role) {
+                case 'SUPER_ADMIN': return 'danger';
+                case 'ADMIN': return 'warning';
+                case 'USER': return 'info';
+                default: return 'secondary';
+            }
+        }
+
+        // Navigation functions
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show selected section
+            document.getElementById(sectionId + '-section').style.display = 'block';
+
+            // Update page title
+            const titles = {
+                'dashboard': 'Dashboard',
+                'users-list': 'Users List',
+                'users-edit': 'Edit User',
+                'users-view': 'View User',
+                'users-delete': 'Delete User',
+                'settings': 'Settings',
+                'reports': 'Reports'
+            };
+            document.getElementById('pageTitle').textContent = titles[sectionId] || 'Dashboard';
+
+            // Update active nav link
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            const activeLink = document.querySelector(`[href="#${sectionId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
+
+        function toggleSubmenu(element) {
+            const submenu = element.nextElementSibling;
+            const icon = element.querySelector('.float-end');
+
+            if (submenu.style.display === 'none' || submenu.style.display === '') {
+                submenu.style.display = 'block';
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-up');
+            } else {
+                submenu.style.display = 'none';
+                icon.classList.remove('bi-chevron-up');
+                icon.classList.add('bi-chevron-down');
+            }
+        }
+
+        // User management functions
+        function viewUser(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (user) {
+                document.getElementById('userDetails').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>ID:</strong> ${user.id}</p>
+                            <p><strong>Username:</strong> ${user.username}</p>
+                            <p><strong>Email:</strong> ${user.email}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Role:</strong> <span class="badge bg-${getRoleBadgeColor(user.role)}">${user.role}</span></p>
+                            <p><strong>Status:</strong> <span class="badge bg-${user.locked ? 'danger' : 'success'}">${user.locked ? 'Locked' : 'Active'}</span></p>
+                            <p><strong>Email Verified:</strong> ${user.emailVerified ? 'Yes' : 'No'}</p>
+                        </div>
+                    </div>
+                    <p><strong>Created:</strong> ${new Date(user.createdAt).toLocaleString()}</p>
+                    <p><strong>Updated:</strong> ${new Date(user.updatedAt).toLocaleString()}</p>
+                `;
+                showSection('users-view');
+            }
+        }
+
+        function editUser(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (user) {
+                document.getElementById('username').value = user.username;
+                document.getElementById('email').value = user.email;
+                document.getElementById('role').value = user.role;
+                document.getElementById('status').value = user.locked ? 'locked' : 'active';
+                showSection('users-edit');
+            }
+        }
+
+        function deleteUser(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (user) {
+                document.getElementById('deleteConfirmation').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6>Are you sure you want to delete this user?</h6>
+                        <p><strong>Username:</strong> ${user.username}</p>
+                        <p><strong>Email:</strong> ${user.email}</p>
+                        <p><strong>Role:</strong> ${user.role}</p>
+                        <p class="mb-0">This action cannot be undone.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-danger" onclick="confirmDelete('${userId}')">Delete User</button>
+                        <button class="btn btn-secondary" onclick="showSection('users-list')">Cancel</button>
+                    </div>
+                `;
+                showSection('users-delete');
+            }
+        }
+
+        async function confirmDelete(userId) {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+
+            try {
+                const response = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (response.ok) {
+                    alert('User deleted successfully!');
+                    await loadUsersList();
+                    await loadDashboardStats();
+                    showSection('users-list');
+                } else {
+                    alert('Failed to delete user. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Error deleting user. Please try again.');
+            }
+        }
+
+        function refreshData() {
+            loadUserData();
+            loadDashboardStats();
+            loadUsersList();
+        }
+
+        // Logout functionality
         document.getElementById('logoutButton').addEventListener('click', function() {
             localStorage.removeItem('accessToken');
             window.location.href = '/admin/login';
+        });
+
+        // Handle user form submission
+        document.getElementById('userForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                role: document.getElementById('role').value,
+                status: document.getElementById('status').value
+            };
+
+            // Here you would implement the API code to create/update user
+            console.log('Form data:', formData);
+            alert('User form submission - API integration needed');
+
+            // Reset form and go back to list
+            this.reset();
+            showSection('users-list');
         });
     </script>
 </body>
