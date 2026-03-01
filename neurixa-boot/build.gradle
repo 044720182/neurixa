@@ -18,4 +18,5 @@ dependencies {
     compileOnly libs.lombok
     annotationProcessor libs.lombok
     testImplementation libs.spring.boot.starter.test
+    testImplementation 'org.springframework.security:spring-security-test'
 }
