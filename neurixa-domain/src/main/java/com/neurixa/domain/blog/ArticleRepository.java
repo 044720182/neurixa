@@ -8,5 +8,6 @@ public interface ArticleRepository {
     Optional<Article> findById(ArticleId id);
     Optional<Article> findBySlug(Slug slug);
     void incrementViewCountAtomic(ArticleId id);
-    List<Article> findPublished();
+    List<Article> findPublished(int page, int size);
+    long countPublished();
 }

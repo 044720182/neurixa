@@ -8,6 +8,7 @@ import com.neurixa.core.files.port.StorageProvider;
 import com.neurixa.core.files.usecase.CreateFolderUseCase;
 import com.neurixa.core.files.usecase.DeleteFileUseCase;
 import com.neurixa.core.files.usecase.ListFolderContentUseCase;
+import com.neurixa.core.files.usecase.ListFolderContentPagedUseCase;
 import com.neurixa.core.files.usecase.MoveFileUseCase;
 import com.neurixa.core.files.usecase.RenameFileUseCase;
 import com.neurixa.core.files.usecase.UploadFileUseCase;
@@ -37,6 +38,11 @@ public class FileUseCaseConfiguration {
     }
 
     @Bean
+    public ListFolderContentPagedUseCase listFolderContentPagedUseCase(FileRepository fileRepository, FolderRepository folderRepository) {
+        return new ListFolderContentPagedUseCase(fileRepository, folderRepository);
+    }
+
+    @Bean
     public RenameFileUseCase renameFileUseCase(FileRepository fileRepository) {
         return new RenameFileUseCase(fileRepository);
     }
@@ -51,4 +57,3 @@ public class FileUseCaseConfiguration {
         return new DeleteFileUseCase(fileRepository);
     }
 }
-

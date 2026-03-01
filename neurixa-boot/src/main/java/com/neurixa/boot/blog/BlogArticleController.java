@@ -3,6 +3,7 @@ package com.neurixa.boot.blog;
 import com.neurixa.application.blog.ArticleCommandService;
 import com.neurixa.application.blog.ArticleQueryService;
 import com.neurixa.boot.dto.response.BlogArticleResponse;
+import com.neurixa.dto.response.PageResponse;
 import com.neurixa.domain.blog.Article;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -65,8 +67,16 @@ public class BlogArticleController {
     }
 
     @GetMapping
-    public List<BlogArticleResponse> listArticles() {
-        return articleQueryService.listPublished().stream().map(BlogArticleResponse::from).toList();
+    public PageResponse<BlogArticleResponse> listArticles(@RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "10") int size) {
+        List<BlogArticleResponse> items = articleQueryService.listPublished(page, size).stream()
+                .map(BlogArticleResponse::from)
+                .toList();
+        long total = articleQueryService.countPublished();
+        int totalPages = (int) Math.ceil((double) total / Math.max(size, 1));
+        boolean hasPrevious = page > 0;
+        boolean hasNext = page < totalPages - 1;
+        return new PageResponse<>(items, page, size, total, totalPages, hasNext, hasPrevious);
     }
 
     public record CreateArticleRequest(String title, String content, String excerpt) {}

@@ -19,7 +19,11 @@ public class ArticleQueryService {
                 .orElseThrow(() -> new IllegalArgumentException("Article not found."));
     }
 
-    public List<Article> listPublished() {
-        return articleRepository.findPublished();
+    public List<Article> listPublished(int page, int size) {
+        return articleRepository.findPublished(page, size);
+    }
+
+    public long countPublished() {
+        return articleRepository.countPublished();
     }
 }

@@ -54,10 +54,21 @@ public class ArticleRepositoryImpl implements ArticleRepository {
     }
 
     @Override
-    public List<Article> findPublished() {
+    public List<Article> findPublished(int page, int size) {
         Query query = new Query();
         query.addCriteria(Criteria.where("status").is(ArticleStatus.PUBLISHED));
         query.addCriteria(Criteria.where("deleted").ne(true));
+        query.skip((long) Math.max(page, 0) * Math.max(size, 1));
+        query.limit(Math.max(size, 1));
+        query.with(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Order.desc("publishedAt")));
         return mongoTemplate.find(query, ArticleDocument.class).stream().map(articleMapper::toDomain).toList();
+    }
+
+    @Override
+    public long countPublished() {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("status").is(ArticleStatus.PUBLISHED));
+        query.addCriteria(Criteria.where("deleted").ne(true));
+        return mongoTemplate.count(query, ArticleDocument.class);
     }
 }

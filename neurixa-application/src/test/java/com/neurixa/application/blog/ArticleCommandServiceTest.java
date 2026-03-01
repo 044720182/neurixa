@@ -37,8 +37,13 @@ class ArticleCommandServiceTest {
         }
 
         @Override
-        public List<Article> findPublished() {
+        public List<Article> findPublished(int page, int size) {
             return List.of();
+        }
+
+        @Override
+        public long countPublished() {
+            return 0;
         }
     }
 
