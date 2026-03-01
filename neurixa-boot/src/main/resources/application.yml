@@ -33,3 +33,15 @@ management:
       enabled: true
     redis:
       enabled: true
+
+neurixa:
+  storage:
+    type: local
+    local:
+      root: /tmp/neurixa-storage
+    allowed-mime-types:
+      - image/jpeg
+      - image/png
+      - application/pdf
+    max-file-size: 10485760 # 10MB
+    delete-physical-on-soft-delete: false

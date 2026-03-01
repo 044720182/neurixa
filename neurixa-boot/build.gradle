@@ -7,7 +7,8 @@ dependencies {
     implementation project(':neurixa-core')
     implementation project(':neurixa-adapter')
     implementation project(':neurixa-config')
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+    implementation ("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+    implementation ("io.micrometer:micrometer-registry-prometheus")
     implementation libs.spring.boot.starter.web
     implementation libs.spring.boot.starter.security
     implementation libs.spring.boot.starter.actuator
@@ -17,4 +18,5 @@ dependencies {
     compileOnly libs.lombok
     annotationProcessor libs.lombok
     testImplementation libs.spring.boot.starter.test
+    testImplementation 'org.springframework.security:spring-security-test'
 }

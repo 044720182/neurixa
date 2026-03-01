@@ -5,6 +5,8 @@ import com.neurixa.core.exception.InvalidCredentialsException;
 import com.neurixa.core.exception.InvalidUserStateException;
 import com.neurixa.core.exception.UserAlreadyExistsException;
 import com.neurixa.core.exception.UserNotFoundException;
+import com.neurixa.core.files.exception.FileValidationException;
+import com.neurixa.core.files.exception.FolderOwnershipException;
 import com.neurixa.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -91,6 +93,19 @@ public class GlobalExceptionHandler {
                 "Invalid input parameters",
                 request.getRequestURI(),
                 details
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler({FileValidationException.class, FolderOwnershipException.class})
+    public ResponseEntity<ErrorResponse> handleFileExceptions(
+            DomainException ex,
+            HttpServletRequest request) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(),
+                request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
