@@ -22,3 +22,8 @@ management:
   endpoint:
     health:
       show-details: always
+
+neurixa:
+  storage:
+    local:
+      root: /tmp/neurixa-storage-dev

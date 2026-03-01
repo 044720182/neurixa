@@ -1,5 +1,6 @@
 package com.neurixa.configuration;
 
+import com.neurixa.adapter.files.config.StorageProperties;
 import com.neurixa.core.files.port.FileRepository;
 import com.neurixa.core.files.port.FileVersionRepository;
 import com.neurixa.core.files.port.FolderRepository;
@@ -19,8 +20,10 @@ public class FileUseCaseConfiguration {
     public UploadFileUseCase uploadFileUseCase(FileRepository fileRepository,
                                                FileVersionRepository fileVersionRepository,
                                                FolderRepository folderRepository,
-                                               StorageProvider storageProvider) {
-        return new UploadFileUseCase(fileRepository, fileVersionRepository, folderRepository, storageProvider);
+                                               StorageProvider storageProvider,
+                                               StorageProperties storageProperties) {
+        return new UploadFileUseCase(fileRepository, fileVersionRepository, folderRepository, storageProvider,
+                storageProperties.getAllowedMimeTypes(), storageProperties.getMaxFileSize());
     }
 
     @Bean

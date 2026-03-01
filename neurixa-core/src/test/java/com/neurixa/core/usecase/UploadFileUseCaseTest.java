@@ -1,10 +1,11 @@
 package com.neurixa.core.usecase;
 
 import com.neurixa.core.domain.UserId;
-import com.neurixa.core.files.domain.FileId;
 import com.neurixa.core.files.domain.Folder;
 import com.neurixa.core.files.domain.FolderId;
 import com.neurixa.core.files.domain.StoredFile;
+import com.neurixa.core.files.exception.FileValidationException;
+import com.neurixa.core.files.exception.FolderOwnershipException;
 import com.neurixa.core.files.port.FileRepository;
 import com.neurixa.core.files.port.FileVersionRepository;
 import com.neurixa.core.files.port.FolderRepository;
@@ -20,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -49,10 +51,14 @@ class UploadFileUseCaseTest {
     private String mimeType;
     private long size;
     private InputStream data;
+    private Set<String> allowedMimeTypes;
+    private long maxFileSize;
 
     @BeforeEach
     void setUp() {
-        useCase = new UploadFileUseCase(fileRepository, fileVersionRepository, folderRepository, storageProvider);
+        allowedMimeTypes = Set.of("text/plain", "image/jpeg");
+        maxFileSize = 200L;
+        useCase = new UploadFileUseCase(fileRepository, fileVersionRepository, folderRepository, storageProvider, allowedMimeTypes, maxFileSize);
         ownerId = new UserId("user-123");
         filename = "test.txt";
         mimeType = "text/plain";
@@ -110,8 +116,8 @@ class UploadFileUseCaseTest {
 
         // When & Then
         assertThatThrownBy(() -> useCase.execute(ownerId, filename, mimeType, size, folderId, data))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Folder not found");
+                .isInstanceOf(FolderOwnershipException.class)
+                .hasMessage("Folder not found or you don't have access");
     }
 
     @Test
@@ -123,8 +129,24 @@ class UploadFileUseCaseTest {
 
         // When & Then
         assertThatThrownBy(() -> useCase.execute(ownerId, filename, mimeType, size, folderId, data))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Folder not found");
+                .isInstanceOf(FolderOwnershipException.class)
+                .hasMessage("Folder not found or you don't have access");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenFileSizeExceedsLimit() {
+        // When & Then
+        assertThatThrownBy(() -> useCase.execute(ownerId, filename, mimeType, 300L, null, data))
+                .isInstanceOf(FileValidationException.class)
+                .hasMessage("File size exceeds the maximum allowed limit");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenMimeTypeNotAllowed() {
+        // When & Then
+        assertThatThrownBy(() -> useCase.execute(ownerId, filename, "application/zip", size, null, data))
+                .isInstanceOf(FileValidationException.class)
+                .hasMessage("File MIME type is not allowed");
     }
 
     @Test
