@@ -334,13 +334,22 @@ curl -X GET http://localhost:8080/api/users \
 
 ---
 
-### 6. List All Users (Admin)
+### 6. List Users (Admin)
 
-List all users in the system (admin only).
+Paginated list of users with optional filters (admin only).
 
 **Endpoint:** `GET /api/admin/users`
 
 **Access:** Admin
+
+**Query Parameters:**
+- `search`: optional string to filter by username or email
+- `role`: optional role filter (`USER`, `ADMIN`, `SUPER_ADMIN`)
+- `locked`: optional boolean to filter locked accounts
+- `page`: page number (default: 0)
+- `size`: page size (default: 20)
+- `sortBy`: field to sort by (default: `createdAt`)
+- `sortDirection`: `asc` or `desc` (default: `desc`)
 
 **Success Response (200 OK):**
 ```json
@@ -350,15 +359,20 @@ List all users in the system (admin only).
       "id": "65f1a2b3c4d5e6f7g8h9i0j1",
       "username": "john_doe",
       "email": "john@example.com",
-      "role": "USER"
-    },
-    ...
+      "role": "USER",
+      "locked": false,
+      "emailVerified": true,
+      "failedLoginAttempts": 0,
+      "createdAt": "2026-02-22T10:00:00",
+      "updatedAt": "2026-02-22T10:00:00"
+    }
   ],
+  "pageNumber": 0,
+  "pageSize": 20,
   "totalElements": 50,
-  "totalPages": 5,
-  "last": false,
-  "size": 10,
-  "number": 0
+  "totalPages": 3,
+  "hasNext": true,
+  "hasPrevious": false
 }
 ```
 
@@ -390,7 +404,7 @@ List all users in the system (admin only).
 
 **cURL Example:**
 ```bash
-curl -X GET http://localhost:8080/api/admin/users \
+curl -X GET "http://localhost:8080/api/admin/users?page=0&size=20&sortBy=createdAt&sortDirection=desc" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
@@ -452,6 +466,219 @@ curl -X GET http://localhost:8080/api/admin/users/me \
 ```
 
 ---
+
+## Blog
+
+### 1. Create Article
+
+Create a new draft article.
+
+**Endpoint:** `POST /api/blog/articles`
+
+**Access:** Admin or authorized role (depending on your security rules)
+
+**Request Body:**
+```json
+{
+  "title": "My First Post",
+  "content": "Post content here",
+  "excerpt": "Short summary"
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "id": "c1a2b3c4-d5e6-7890-1234-56789abcde00",
+  "title": "My First Post",
+  "slug": "my-first-post",
+  "content": "Post content here",
+  "excerpt": "Short summary",
+  "featuredImageId": null,
+  "status": "DRAFT",
+  "createdAt": "2026-03-02T12:00:00Z",
+  "updatedAt": "2026-03-02T12:00:00Z",
+  "publishedAt": null,
+  "viewCount": 0,
+  "metaTitle": null,
+  "metaDescription": null,
+  "categoryIds": [],
+  "tagIds": []
+}
+```
+
+**cURL Example:**
+```bash
+curl -X POST http://localhost:8080/api/blog/articles \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"title":"My First Post","content":"Post content here","excerpt":"Short summary"}'
+```
+
+### 2. Update Article
+
+**Endpoint:** `PUT /api/blog/articles/{id}`
+
+**Request Body:**
+```json
+{ "title":"Updated Title", "content":"Updated content", "excerpt":"Updated summary" }
+```
+
+**Response:** Article DTO (same shape as Create response)
+
+### 3. Delete Article
+
+**Endpoint:** `DELETE /api/blog/articles/{id}`
+
+**Response:** `204 No Content`
+
+### 4. Publish Article
+
+**Endpoint:** `POST /api/blog/articles/{id}/publish`
+
+**Response:** Article DTO with `status = PUBLISHED` and `publishedAt` set
+
+### 5. Restore Article
+
+**Endpoint:** `POST /api/blog/articles/{id}/restore`
+
+**Response:** Article DTO with restored state
+
+### 6. Get Article by Slug
+
+**Endpoint:** `GET /api/blog/articles/{slug}`
+
+**Response:** Article DTO
+
+### 7. List Published Articles (Paginated)
+
+**Endpoint:** `GET /api/blog/articles`
+
+**Query Parameters:**
+- `page`: page number (default: 0)
+- `size`: page size (default: 10)
+
+**Success Response (200 OK):**
+```json
+{
+  "content": [
+    {
+      "id": "c1a2b3c4-d5e6-7890-1234-56789abcde00",
+      "title": "Post Title",
+      "slug": "post-title",
+      "excerpt": "Short summary",
+      "status": "PUBLISHED",
+      "publishedAt": "2026-03-01T12:05:00Z",
+      "viewCount": 10
+    }
+  ],
+  "pageNumber": 0,
+  "pageSize": 10,
+  "totalElements": 42,
+  "totalPages": 5,
+  "hasNext": true,
+  "hasPrevious": false
+}
+```
+
+**cURL Example:**
+```bash
+curl -X GET "http://localhost:8080/api/blog/articles?page=0&size=10" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+### 8. Comments
+
+- Add comment: `POST /api/blog/comments`
+  - Body:
+  ```json
+  { "articleId":"<ARTICLE_ID>", "authorName":"Alice", "authorEmail":"alice@example.com", "content":"Great post!", "replyTo": null }
+  ```
+  - Response: Comment DTO
+- Approve comment: `POST /api/blog/comments/{id}/approve`
+- Reject comment: `POST /api/blog/comments/{id}/reject`
+
+### 9. Categories
+
+- Create category: `POST /api/blog/categories`
+  - Body:
+  ```json
+  { "name":"Technology", "parentId": null }
+  ```
+  - Response: Category DTO
+
+### 10. Tags
+
+- Create tag: `POST /api/blog/tags`
+  - Body:
+  ```json
+  { "name":"java" }
+  ```
+  - Response: Tag DTO
+
+---
+
+## Files & Folders
+
+### 1. List Folder Contents (Non-paged)
+
+**Endpoint:** `GET /api/folders/contents`
+
+**Query Parameters:**
+- `parentId`: optional folder id. Omit to list root contents.
+
+**Success Response (200 OK):**
+```json
+{
+  "folders": [
+    { "id":"folder-1", "name":"Docs", "parentId":null, "path":"/Docs", "createdAt":"...", "updatedAt":"..." }
+  ],
+  "files": [
+    { "id":"file-1", "name":"readme.md", "mimeType":"text/markdown", "size": 1024, "folderId": null, "status":"ACTIVE", "createdAt":"...", "updatedAt":"..." }
+  ]
+}
+```
+
+### 2. List Folder Contents (Paged)
+
+**Endpoint:** `GET /api/folders/contents/paged`
+
+**Query Parameters:**
+- `parentId`: optional folder id. Omit to list root contents.
+- `pageFolders`: page for folders (default: 0)
+- `sizeFolders`: page size for folders (default: 20)
+- `pageFiles`: page for files (default: 0)
+- `sizeFiles`: page size for files (default: 20)
+
+**Success Response (200 OK):**
+```json
+{
+  "folders": {
+    "content": [ { "id":"folder-1", "name":"Docs", "parentId":null, "path":"/Docs" } ],
+    "pageNumber": 0,
+    "pageSize": 20,
+    "totalElements": 3,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  },
+  "files": {
+    "content": [ { "id":"file-1", "name":"readme.md", "mimeType":"text/markdown", "size":1024, "folderId":null } ],
+    "pageNumber": 0,
+    "pageSize": 20,
+    "totalElements": 12,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
+
+**cURL Example:**
+```bash
+curl -X GET "http://localhost:8080/api/folders/contents/paged?pageFolders=0&sizeFolders=20&pageFiles=0&sizeFiles=20" \
+  -H "Authorization: Bearer <TOKEN>"
+```
 
 ### 8. Update User (Admin)
 

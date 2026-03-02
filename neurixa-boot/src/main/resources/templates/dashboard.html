@@ -166,6 +166,48 @@
                             </ul>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="#blog" onclick="toggleSubmenu(this)">
+                                <i class="bi bi-journal-text"></i>
+                                Blog
+                                <i class="bi bi-chevron-down float-end"></i>
+                            </a>
+                            <ul class="nav flex-column submenu" style="display: none;">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#blog-articles" onclick="showSection('blog-articles')">
+                                        <i class="bi bi-list-ul"></i>
+                                        Articles
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#blog-create" onclick="showSection('blog-create')">
+                                        <i class="bi bi-plus-circle"></i>
+                                        Create Article
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#blog-comments" onclick="showSection('blog-comments')">
+                                        <i class="bi bi-chat-dots"></i>
+                                        Comments
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#files" onclick="toggleSubmenu(this)">
+                                <i class="bi bi-folder2-open"></i>
+                                Files
+                                <i class="bi bi-chevron-down float-end"></i>
+                            </a>
+                            <ul class="nav flex-column submenu" style="display: none;">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#files-manager" onclick="showSection('files-manager')">
+                                        <i class="bi bi-grid"></i>
+                                        Manager
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="#settings" onclick="showSection('settings')">
                                 <i class="bi bi-gear"></i>
                                 Settings
@@ -289,6 +331,36 @@
                             </button>
                         </div>
                         <div class="card-body">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="usersSearch" placeholder="Search username or email">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="usersRole">
+                                        <option value="">All Roles</option>
+                                        <option value="USER">User</option>
+                                        <option value="ADMIN">Admin</option>
+                                        <option value="SUPER_ADMIN">Super Admin</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" id="usersLocked">
+                                        <option value="">Any Status</option>
+                                        <option value="false">Active</option>
+                                        <option value="true">Locked</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" id="usersPageSize">
+                                        <option>10</option>
+                                        <option selected>20</option>
+                                        <option>50</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-outline-secondary w-100" onclick="loadUsersList(0)">Apply</button>
+                                </div>
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-striped">
                                     <thead>
@@ -307,6 +379,16 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span id="usersTotal"></span>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-secondary btn-sm" id="usersPrev" onclick="usersPrev()">Prev</button>
+                                    <span class="btn btn-outline-secondary btn-sm disabled" id="usersPageIndicator">Page 1</span>
+                                    <button class="btn btn-outline-secondary btn-sm" id="usersNext" onclick="usersNext()">Next</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -407,6 +489,195 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Blog Articles Section -->
+                <div id="blog-articles-section" class="content-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Articles</h5>
+                            <button class="btn btn-primary btn-sm" onclick="showSection('blog-create')"><i class="bi bi-plus-circle"></i> New Article</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-2">
+                                    <select class="form-select" id="articlesPageSize">
+                                        <option selected>10</option>
+                                        <option>20</option>
+                                        <option>50</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-outline-secondary w-100" onclick="loadArticles(0)">Apply</button>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Slug</th>
+                                            <th>Status</th>
+                                            <th>Published</th>
+                                            <th>Views</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="articlesTableBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">Loading articles...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span id="articlesTotal"></span>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-secondary btn-sm" id="articlesPrev" onclick="articlesPrev()">Prev</button>
+                                    <span class="btn btn-outline-secondary btn-sm disabled" id="articlesPageIndicator">Page 1</span>
+                                    <button class="btn btn-outline-secondary btn-sm" id="articlesNext" onclick="articlesNext()">Next</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blog Create Section -->
+                <div id="blog-create-section" class="content-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Create Article</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="articleForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Title</label>
+                                    <input type="text" class="form-control" id="articleTitle" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Excerpt</label>
+                                    <input type="text" class="form-control" id="articleExcerpt">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Content</label>
+                                    <textarea class="form-control" rows="6" id="articleContent" required></textarea>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Create</button>
+                                    <button type="button" class="btn btn-secondary" onclick="showSection('blog-articles')">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blog Comments Section -->
+                <div id="blog-comments-section" class="content-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Comments Moderation</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Author</th>
+                                            <th>Email</th>
+                                            <th>Content</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="commentsTableBody">
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted">Load comments by article.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Files Manager Section -->
+                <div id="files-manager-section" class="content-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Files Manager</h5>
+                            <div class="d-flex gap-2">
+                                <input type="file" class="form-control form-control-sm" id="uploadInput">
+                                <button class="btn btn-primary btn-sm" onclick="uploadFile()">Upload</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" id="currentFolderId" placeholder="Folder ID">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="newFolderName" placeholder="New Folder Name">
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-outline-secondary w-100" onclick="createFolder()">Create Folder</button>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-outline-secondary w-100" onclick="loadFolderContents()">Load Contents</button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Folders</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Path</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="foldersTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div><span id="foldersTotal"></span></div>
+                                        <div class="btn-group">
+                                            <button class="btn btn-outline-secondary btn-sm" id="foldersPrev" onclick="foldersPrev()">Prev</button>
+                                            <span class="btn btn-outline-secondary btn-sm disabled" id="foldersPageIndicator">Page 1</span>
+                                            <button class="btn btn-outline-secondary btn-sm" id="foldersNext" onclick="foldersNext()">Next</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Files</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Type</th>
+                                                    <th>Size</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="filesTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div><span id="filesTotal"></span></div>
+                                        <div class="btn-group">
+                                            <button class="btn btn-outline-secondary btn-sm" id="filesPrev" onclick="filesPrev()">Prev</button>
+                                            <span class="btn btn-outline-secondary btn-sm disabled" id="filesPageIndicator">Page 1</span>
+                                            <button class="btn btn-outline-secondary btn-sm" id="filesNext" onclick="filesNext()">Next</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
@@ -417,12 +688,29 @@
     <script>
         let currentUser = null;
         let allUsers = [];
+        let usersPage = 0;
+        let usersSize = 20;
+        let usersHasNext = false;
+        let usersHasPrevious = false;
+        let articlesPage = 0;
+        let articlesSize = 10;
+        let articlesHasNext = false;
+        let articlesHasPrevious = false;
+        let foldersPage = 0;
+        let foldersSize = 20;
+        let foldersHasNext = false;
+        let foldersHasPrevious = false;
+        let filesPage = 0;
+        let filesSize = 20;
+        let filesHasNext = false;
+        let filesHasPrevious = false;
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', async function() {
             await loadUserData();
             await loadDashboardStats();
-            await loadUsersList();
+            await loadUsersList(0);
+            await loadArticles(0);
         });
 
         // Load current user data
@@ -459,7 +747,7 @@
             if (!token) return;
 
             try {
-                const response = await fetch('/api/admin/users', {
+                const response = await fetch('/api/admin/users?page=0&size=20', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
 
@@ -478,23 +766,52 @@
         }
 
         // Load users list
-        async function loadUsersList() {
+        async function loadUsersList(page) {
             const token = localStorage.getItem('accessToken');
             if (!token) return;
+            const search = document.getElementById('usersSearch').value;
+            const role = document.getElementById('usersRole').value;
+            const lockedSel = document.getElementById('usersLocked').value;
+            const locked = lockedSel === '' ? '' : lockedSel;
+            usersSize = parseInt(document.getElementById('usersPageSize').value, 10);
+            usersPage = page;
 
             try {
-                const response = await fetch('/api/admin/users', {
+                const params = new URLSearchParams();
+                if (search) params.append('search', search);
+                if (role) params.append('role', role);
+                if (locked !== '') params.append('locked', locked);
+                params.append('page', usersPage);
+                params.append('size', usersSize);
+                params.append('sortBy', 'createdAt');
+                params.append('sortDirection', 'desc');
+                const response = await fetch('/api/admin/users?' + params.toString(), {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
 
                 if (response.ok) {
                     const data = await response.json();
                     allUsers = data.content || data;
+                    usersHasNext = data.hasNext ?? false;
+                    usersHasPrevious = data.hasPrevious ?? false;
+                    const total = data.totalElements ?? allUsers.length;
+                    document.getElementById('usersTotal').textContent = 'Total: ' + total;
+                    document.getElementById('usersPrev').disabled = !usersHasPrevious;
+                    document.getElementById('usersNext').disabled = !usersHasNext;
+                    document.getElementById('usersPageIndicator').textContent = 'Page ' + (usersPage + 1);
                     renderUsersTable();
                 }
             } catch (error) {
                 console.error('Error loading users list:', error);
             }
+        }
+
+        function usersPrev() {
+            if (usersHasPrevious) loadUsersList(usersPage - 1);
+        }
+
+        function usersNext() {
+            if (usersHasNext) loadUsersList(usersPage + 1);
         }
 
         // Render users table
@@ -672,7 +989,8 @@
         function refreshData() {
             loadUserData();
             loadDashboardStats();
-            loadUsersList();
+            loadUsersList(usersPage);
+            loadArticles(articlesPage);
         }
 
         // Logout functionality
@@ -692,14 +1010,221 @@
                 status: document.getElementById('status').value
             };
 
-            // Here you would implement the API code to create/update user
-            console.log('Form data:', formData);
-            alert('User form submission - API integration needed');
+            alert('User form submission placeholder');
 
             // Reset form and go back to list
             this.reset();
             showSection('users-list');
         });
+
+        async function loadArticles(page) {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+            articlesSize = parseInt(document.getElementById('articlesPageSize').value, 10);
+            articlesPage = page;
+            try {
+                const response = await fetch(`/api/blog/articles?page=${articlesPage}&size=${articlesSize}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const items = data.content || [];
+                    const tbody = document.getElementById('articlesTableBody');
+                    tbody.innerHTML = '';
+                    if (items.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No articles found.</td></tr>';
+                    } else {
+                        items.forEach(a => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${a.title}</td>
+                                <td>${a.slug}</td>
+                                <td><span class="badge bg-${a.status === 'PUBLISHED' ? 'success' : 'secondary'}">${a.status}</span></td>
+                                <td>${a.publishedAt ? new Date(a.publishedAt).toLocaleString() : '-'}</td>
+                                <td>${a.viewCount ?? 0}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" onclick="publishArticle('${a.id}')" ${a.status === 'PUBLISHED' ? 'disabled' : ''}>Publish</button>
+                                        <button class="btn btn-outline-secondary" onclick="restoreArticle('${a.id}')">Restore</button>
+                                        <button class="btn btn-outline-danger" onclick="deleteArticle('${a.id}')">Delete</button>
+                                    </div>
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    }
+                    articlesHasNext = data.hasNext ?? false;
+                    articlesHasPrevious = data.hasPrevious ?? false;
+                    const total = data.totalElements ?? items.length;
+                    document.getElementById('articlesTotal').textContent = 'Total: ' + total;
+                    document.getElementById('articlesPrev').disabled = !articlesHasPrevious;
+                    document.getElementById('articlesNext').disabled = !articlesHasNext;
+                    document.getElementById('articlesPageIndicator').textContent = 'Page ' + (articlesPage + 1);
+                }
+            } catch (e) {}
+        }
+
+        function articlesPrev() {
+            if (articlesHasPrevious) loadArticles(articlesPage - 1);
+        }
+
+        function articlesNext() {
+            if (articlesHasNext) loadArticles(articlesPage + 1);
+        }
+
+        document.getElementById('articleForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+            const body = {
+                title: document.getElementById('articleTitle').value,
+                content: document.getElementById('articleContent').value,
+                excerpt: document.getElementById('articleExcerpt').value
+            };
+            const response = await fetch('/api/blog/articles', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (response.ok) {
+                showSection('blog-articles');
+                await loadArticles(0);
+            }
+        });
+
+        async function publishArticle(id) {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+            const resp = await fetch(`/api/blog/articles/${id}/publish`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
+            if (resp.ok) loadArticles(articlesPage);
+        }
+
+        async function restoreArticle(id) {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+            const resp = await fetch(`/api/blog/articles/${id}/restore`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
+            if (resp.ok) loadArticles(articlesPage);
+        }
+
+        async function deleteArticle(id) {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+            const resp = await fetch(`/api/blog/articles/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+            if (resp.ok) loadArticles(articlesPage);
+        }
+
+        async function loadFolderContents() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+            const parentId = document.getElementById('currentFolderId').value || '';
+            const url = `/api/folders/contents/paged?parentId=${encodeURIComponent(parentId)}&pageFolders=${foldersPage}&sizeFolders=${foldersSize}&pageFiles=${filesPage}&sizeFiles=${filesSize}`;
+            const resp = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+            if (resp.ok) {
+                const data = await resp.json();
+                const folders = data.folders?.content ?? [];
+                const files = data.files?.content ?? [];
+                const ftbody = document.getElementById('foldersTableBody');
+                ftbody.innerHTML = '';
+                if (folders.length === 0) ftbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No folders</td></tr>';
+                folders.forEach(f => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${f.name}</td>
+                        <td>${f.path}</td>
+                        <td><button class="btn btn-sm btn-outline-primary" onclick="enterFolder('${f.id}')">Open</button></td>
+                    `;
+                    ftbody.appendChild(tr);
+                });
+                const filesBody = document.getElementById('filesTableBody');
+                filesBody.innerHTML = '';
+                if (files.length === 0) filesBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No files</td></tr>';
+                files.forEach(f => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${f.name}</td>
+                        <td>${f.mimeType}</td>
+                        <td>${f.size}</td>
+                        <td></td>
+                    `;
+                    filesBody.appendChild(tr);
+                });
+                const totalFolders = data.folders?.totalElements ?? folders.length;
+                const totalFiles = data.files?.totalElements ?? files.length;
+                document.getElementById('foldersTotal').textContent = 'Total: ' + totalFolders;
+                document.getElementById('filesTotal').textContent = 'Total: ' + totalFiles;
+                foldersHasNext = data.folders?.hasNext ?? false;
+                foldersHasPrevious = data.folders?.hasPrevious ?? false;
+                filesHasNext = data.files?.hasNext ?? false;
+                filesHasPrevious = data.files?.hasPrevious ?? false;
+                document.getElementById('foldersPrev').disabled = !foldersHasPrevious;
+                document.getElementById('foldersNext').disabled = !foldersHasNext;
+                document.getElementById('filesPrev').disabled = !filesHasPrevious;
+                document.getElementById('filesNext').disabled = !filesHasNext;
+                document.getElementById('foldersPageIndicator').textContent = 'Page ' + (foldersPage + 1);
+                document.getElementById('filesPageIndicator').textContent = 'Page ' + (filesPage + 1);
+            }
+        }
+
+        function foldersPrev() {
+            if (foldersHasPrevious) {
+                foldersPage -= 1;
+                loadFolderContents();
+            }
+        }
+
+        function foldersNext() {
+            if (foldersHasNext) {
+                foldersPage += 1;
+                loadFolderContents();
+            }
+        }
+
+        function filesPrev() {
+            if (filesHasPrevious) {
+                filesPage -= 1;
+                loadFolderContents();
+            }
+        }
+
+        function filesNext() {
+            if (filesHasNext) {
+                filesPage += 1;
+                loadFolderContents();
+            }
+        }
+
+        function enterFolder(id) {
+            document.getElementById('currentFolderId').value = id;
+            foldersPage = 0;
+            filesPage = 0;
+            loadFolderContents();
+        }
+
+        async function uploadFile() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+            const fileInput = document.getElementById('uploadInput');
+            if (!fileInput.files.length) return;
+            const form = new FormData();
+            form.append('file', fileInput.files[0]);
+            const folderId = document.getElementById('currentFolderId').value;
+            if (folderId) form.append('folderId', folderId);
+            const resp = await fetch('/api/files/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: form });
+            if (resp.ok) loadFolderContents();
+        }
+
+        async function createFolder() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+            const name = document.getElementById('newFolderName').value;
+            const parentId = document.getElementById('currentFolderId').value || null;
+            const body = { name: name, parentId: parentId };
+            const resp = await fetch('/api/folders', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            if (resp.ok) {
+                document.getElementById('newFolderName').value = '';
+                loadFolderContents();
+            }
+        }
     </script>
 </body>
 </html>
