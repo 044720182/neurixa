@@ -1,368 +1,303 @@
-# Neurixa Architecture Guide: Mastering Software Design and Architecture
+# Neurixa Architecture Guide
 
-Welcome to the **Neurixa** project! This comprehensive guide is crafted to empower you—whether you're a beginner dipping your toes into programming or an experienced developer sharpening your skills—to master software design, programming principles, and architectural patterns. We'll explore why good architecture matters, dive into the fundamentals of software design, and dissect Hexagonal Architecture through practical examples from our codebase.
-
-By the end, you'll not only understand how Neurixa works but also gain timeless skills to build maintainable, testable, and scalable software.
-
----
-
-## 🧭 Table of Contents
-1. [Why Software Architecture and Design Matter](#1-why-software-architecture-and-design-matter)
-2. [Fundamentals of Software Design](#2-fundamentals-of-software-design)
-3. [What is Hexagonal Architecture?](#3-what-is-hexagonal-architecture)
-4. [The Neurixa Modules](#4-the-neurixa-modules)
-5. [How Data Flows (The Request Lifecycle)](#5-how-data-flows-the-request-lifecycle)
-6. [Step-by-Step: Adding a New Feature](#6-step-by-step-adding-a-new-feature)
-7. [Testing Strategies in Hexagonal Architecture](#7-testing-strategies-in-hexagonal-architecture)
-8. [Local Setup & Commands](#8-local-setup--commands)
-9. [FAQ & Common Patterns](#9-faq--common-patterns)
+## Table of Contents
+1. [Why Architecture Matters](#1-why-architecture-matters)
+2. [Hexagonal-lite Architecture](#2-hexagonal-lite-architecture)
+3. [Module Structure](#3-module-structure)
+4. [Request Lifecycle](#4-request-lifecycle)
+5. [Adding a New Feature](#5-adding-a-new-feature)
+6. [Testing Strategy](#6-testing-strategy)
+7. [Common Questions](#7-common-questions)
 
 ---
 
-## 1. Why Software Architecture and Design Matter
+## 1. Why Architecture Matters
 
-Before we jump into code, let's understand why architecture is crucial. Poorly designed software is like a house built on sand—it might stand for a while, but changes, bugs, and scaling issues will eventually bring it down.
+Good architecture gives you:
+- **Maintainability** — change one thing without breaking others
+- **Testability** — test business logic without spinning up a database
+- **Flexibility** — swap MongoDB for PostgreSQL by touching one file
+- **Team clarity** — everyone knows where code belongs
 
-### Key Benefits of Good Architecture
-- **Maintainability:** Easy to modify and extend without breaking existing code.
-- **Testability:** Isolate and test components independently.
-- **Scalability:** Handle growth in users, data, or features.
-- **Flexibility:** Swap technologies (e.g., databases) with minimal changes.
-- **Team Collaboration:** Clear structure helps multiple developers work efficiently.
-
-### Common Pitfalls in Software Design
-- **Tight Coupling:** When classes depend directly on each other, changes cascade.
-- **Mixed Concerns:** Business logic mixed with UI or database code.
-- **Lack of Abstraction:** Hard-coded implementations instead of interfaces.
-
-In this guide, we'll learn how Hexagonal Architecture addresses these issues.
+Common pitfalls this architecture avoids:
+- Business logic scattered across controllers and repositories
+- Framework annotations (`@Autowired`, `@Document`) leaking into domain logic
+- Tests that require a running Spring context just to verify a calculation
 
 ---
 
-## 2. Fundamentals of Software Design
+## 2. Hexagonal-lite Architecture
 
-Software design is about organizing code into logical, reusable parts. Here are core principles we'll apply:
+### The Core Idea
 
-### SOLID Principles
-- **S - Single Responsibility:** Each class should have one reason to change.
-- **O - Open/Closed:** Open for extension, closed for modification.
-- **L - Liskov Substitution:** Subtypes should be substitutable for their base types.
-- **I - Interface Segregation:** Clients shouldn't depend on unused interfaces.
-- **D - Dependency Inversion:** Depend on abstractions, not concretions.
+The **core domain** knows nothing about the outside world. It only defines *what* it wants via interfaces called **ports**. Everything else — databases, web frameworks, password encoders — is an **adapter** that plugs into those ports.
 
-### Other Key Concepts
-- **Abstraction:** Hide complexity with interfaces.
-- **Encapsulation:** Bundle data and methods, expose only what's needed.
-- **Modularity:** Break systems into independent modules.
-- **Dependency Injection:** Pass dependencies rather than creating them inside classes.
-
-We'll see these in action throughout the guide.
-
----
-
-## 3. What is Hexagonal Architecture?
-
-Hexagonal Architecture, also known as **Ports and Adapters** or inspired by **Clean Architecture**, separates your application's core logic from external concerns like databases, web frameworks, or APIs.
-
-### Traditional Layered Architecture vs. Hexagonal
-In traditional **Layered Architecture** (common in Spring Boot):
 ```
-Controller (Web) → Service (Business) → Repository (Data) → Database
+┌─────────────────────────────────────────┐
+│              Outside World              │
+│  (MongoDB, Redis, HTTP, BCrypt, JWT)    │
+│                                         │
+│   ┌─────────────────────────────────┐   │
+│   │           Adapters              │   │
+│   │  (implement ports, translate)   │   │
+│   │                                 │   │
+│   │   ┌───────────────────────┐     │   │
+│   │   │    Core Domain        │     │   │
+│   │   │  (pure Java, zero     │     │   │
+│   │   │   dependencies)       │     │   │
+│   │   │  - Entities           │     │   │
+│   │   │  - Use Cases          │     │   │
+│   │   │  - Ports (interfaces) │     │   │
+│   │   └───────────────────────┘     │   │
+│   └─────────────────────────────────┘   │
+└─────────────────────────────────────────┘
 ```
-Problems:
-- Business logic depends on frameworks (e.g., Spring annotations).
-- Hard to test without starting the full app.
-- Switching databases requires changing business code.
-
-**Hexagonal Architecture** inverts this:
-- **Core (Business Logic):** Pure domain logic, no external dependencies.
-- **Ports:** Interfaces defining how the core interacts with the outside world.
-- **Adapters:** Implementations of ports for specific technologies (e.g., MongoDB adapter).
-
-### The Phone Charger Analogy 🔌
-Imagine your phone as the **Core**—it knows how to charge and store power but doesn't care about the source.
-- **Port:** The USB-C connector (interface/contract).
-- **Adapter:** Wall charger, car adapter, or power bank (implementations).
-
-This way, you can plug in any charger without changing the phone.
 
 ### The Golden Rule
-> 🛡️ **The Core depends on NOTHING.** It defines ports (interfaces) for external interactions. Adapters implement these ports, allowing the core to remain isolated and testable.
+> **The Core depends on NOTHING.** It defines ports (interfaces) for external interactions. Adapters implement those ports.
 
-```mermaid
-graph TD
-    Adapter[/"Adapter (Implementation)"/] -.->|Implements| Port
-    Port["Port (Interface)"] --> Core["Core (Domain Models & Use Cases)"]
-    
-    style Core fill:#e1f5fe,stroke:#03a9f4
-    style Port fill:#fff,stroke:#333
-    style Adapter fill:#f1f8e9,stroke:#8bc34a
-```
+### Phone Charger Analogy 🔌
+- **Phone** = Core domain (knows how to charge, doesn't care about power source)
+- **USB-C port** = Port interface (the contract)
+- **Wall charger / car adapter** = Adapter implementations
 
-Benefits:
-- **Testability:** Test core logic with mock adapters.
-- **Flexibility:** Change databases or frameworks by swapping adapters.
-- **Maintainability:** Business rules are centralized and framework-agnostic.
+You can swap the charger without modifying the phone.
 
 ---
 
-## 4. The Neurixa Modules
+## 3. Module Structure
 
-Our codebase uses Hexagonal Architecture with four modules, each with clear responsibilities. Dependencies flow inward: outer layers depend on inner ones, but not vice versa.
-
-```mermaid
-graph TD
-    Boot["neurixa-boot (Entry Point)"] --> Config["neurixa-config (Security)"]
-    Boot --> Adapter["neurixa-adapter (Infrastructure)"]
-    Adapter --> Core["neurixa-core (Business Logic)"]
-    
-    classDef core fill:#e1f5fe,stroke:#03a9f4,stroke-width:2px;
-    classDef adapter fill:#f1f8e9,stroke:#8bc34a,stroke-width:2px;
-    classDef boot fill:#fff3e0,stroke:#ff9800,stroke-width:2px;
-    classDef config fill:#fce4ec,stroke:#e91e63,stroke-width:2px;
-    
-    class Core core;
-    class Adapter adapter;
-    class Boot boot;
-    class Config config;
+```
+neurixa/
+├── neurixa-core/     # Pure domain logic — ZERO external dependencies
+├── neurixa-adapter/  # Infrastructure implementations (MongoDB, Redis, BCrypt)
+├── neurixa-config/   # Security & cross-cutting config (JWT, Spring Security)
+└── neurixa-boot/     # Spring Boot entry point — controllers, DTOs, wiring
 ```
 
-### 🧠 `neurixa-core` (The Brain - Business Logic)
-- **Contents:** Domain models (e.g., `User`), Use Cases (e.g., `RegisterUserUseCase`), Ports (interfaces like `UserRepository`).
-- **Rules:** Pure Java—no Spring, no database imports. Only business rules and logic.
-- **Benefits:** Fast testing, reusable across frameworks, encapsulates domain knowledge.
-- **Example:** A `User` class with validation in its constructor.
+### Dependency Flow
 
-### 🔌 `neurixa-adapter` (The Connectors - Infrastructure)
-- **Contents:** Implementations of core ports (e.g., `MongoUserRepository` implements `UserRepository`), database mappings, external API clients.
-- **Rules:** Translates between core domain objects and external formats (e.g., MongoDB documents). Depends on `neurixa-core`.
-- **Benefits:** Isolates technology-specific code; easy to replace (e.g., switch to PostgreSQL).
-- **Example:** Converting a `User` domain object to a MongoDB `Document`.
+```
+neurixa-boot
+  ├── neurixa-adapter  (Spring, MongoDB, Redis)
+  │     └── neurixa-core  (PURE JAVA — no frameworks)
+  └── neurixa-config   (Spring Security, JWT)
+```
 
-### 🛡️ `neurixa-config` (Security - Shared Infrastructure)
-- **Contents:** JWT providers, security filters, authentication logic.
-- **Rules:** Provides cross-cutting concerns like security. Independent but used by boot.
-- **Benefits:** Centralized security configuration, reusable across modules.
+Outer layers depend on inner ones. The core never depends on anything outside itself.
 
-### 🚀 `neurixa-boot` (The Engine - Application Entry)
-- **Contents:** REST controllers, Spring configurations, `main()` method, DTOs.
-- **Rules:** Wires everything together with dependency injection. The only module with Spring Boot.
-- **Benefits:** Entry point for the app; handles HTTP requests and responses.
-- **Example:** `AuthController` receives JSON, calls use cases, returns responses.
+### Module Responsibilities
+
+#### 🧠 `neurixa-core` — The Brain
+- Domain entities (`User`, `StoredFile`, `Folder`)
+- Use cases (`RegisterUserUseCase`, `LoginUserUseCase`, `UploadFileUseCase`)
+- Port interfaces (`UserRepository`, `PasswordEncoder`, `StorageProvider`)
+- Domain exceptions (`UserAlreadyExistsException`, `InvalidCredentialsException`)
+- **Rule:** Pure Java only. No Spring, no Mongo, no Lombok.
+
+#### 🔌 `neurixa-adapter` — The Connectors
+- MongoDB repository implementations (`MongoUserRepository`)
+- Document mapping classes (`UserDocument`)
+- Storage implementations (`LocalStorageProvider`)
+- Password encoder adapter (`BcryptPasswordEncoderAdapter`)
+- **Rule:** Translates between domain objects and external formats.
+
+#### 🛡️ `neurixa-config` — Security
+- `JwtTokenProvider` — token creation and validation
+- `JwtAuthenticationFilter` — per-request token processing
+- `JwtAuthenticationEntryPoint` — 401 responses
+- `SecurityConfig` — dual filter chain (admin + api)
+- **Rule:** Centralized, reusable security concerns.
+
+#### 🚀 `neurixa-boot` — The Entry Point
+- REST controllers (`AuthController`, `FileController`, `FolderController`)
+- DTOs (request/response objects)
+- `UseCaseConfiguration` — wires use cases as Spring beans
+- `NeurixaApplication` — `main()` method
+- **Rule:** Wires everything together. No business logic here.
 
 ---
 
-## 5. How Data Flows (The Request Lifecycle)
+## 4. Request Lifecycle
 
-Understanding data flow helps you see how layers interact. Let's trace a user registration request:
+### Example: User Registration
+
+```
+Client
+  │  POST /api/auth/register {"username":"john","email":"...","password":"..."}
+  ▼
+AuthController (neurixa-boot)
+  │  Receives RegisterRequest DTO, triggers @Valid
+  ▼
+RegisterUserUseCase (neurixa-core)
+  │  Checks uniqueness, encodes password via PasswordEncoder port
+  ▼
+BcryptPasswordEncoderAdapter (neurixa-adapter)
+  │  Hashes password using BCrypt
+  ▼
+MongoUserRepository (neurixa-adapter)
+  │  Saves UserDocument to MongoDB
+  ▼
+AuthController
+  │  Receives User domain object, generates JWT, converts to UserResponse DTO
+  ▼
+Client
+     201 Created {"token":"...","user":{...}}
+```
 
 ```mermaid
 sequenceDiagram
     participant Client
     participant Controller as AuthController (boot)
     participant UseCase as RegisterUserUseCase (core)
-    participant Port as UserRepository (core)
-    participant Adapter as MongoUserRepository (adapter)
+    participant Encoder as PasswordEncoder port
+    participant Repo as UserRepository port
     participant DB as MongoDB
 
-    Client->>Controller: POST /api/auth/register (JSON)
+    Client->>Controller: POST /api/auth/register
     Controller->>UseCase: execute(username, email, password)
-    Note over UseCase: Validates business rules (e.g., unique email)
-    UseCase->>Port: save(User domainModel)
-    Port->>Adapter: save(User domainModel)
-    Adapter->>Adapter: Convert to Mongo Document
-    Adapter->>DB: save()
-    DB-->>Adapter: Saved Document
-    Adapter->>Adapter: Convert back to Domain Model
-    Adapter-->>UseCase: User domainModel
-    UseCase-->>Controller: User domainModel
-    Controller-->>Client: HTTP 200 OK (JSON)
+    UseCase->>Encoder: encode(rawPassword)
+    Encoder-->>UseCase: hashedPassword
+    UseCase->>Repo: save(User domain object)
+    Repo->>DB: insert document
+    DB-->>Repo: saved document
+    Repo-->>UseCase: User domain object
+    UseCase-->>Controller: User domain object
+    Controller-->>Client: 201 Created + JWT
 ```
-
-Key Points:
-- Data enters via Controllers (DTOs), flows to Use Cases (domain objects), through Ports to Adapters.
-- Adapters handle I/O; Core remains pure.
-- Errors (e.g., validation failures) bubble back as exceptions.
 
 ---
 
-## 6. Step-by-Step: Adding a New Feature
+## 5. Adding a New Feature
 
-Let's add a "Login" feature to illustrate the process. We'll follow Hexagonal principles.
+Follow these steps in order to maintain clean boundaries.
 
-### Step 1: Define Core Logic (`neurixa-core`)
-Focus on business rules—nothing else.
+### Step 1 — Core: Define business logic (`neurixa-core`)
 
 ```java
-// 1a. Domain Exception
-public class InvalidCredentialsException extends RuntimeException {
-    public InvalidCredentialsException(String message) {
-        super(message);
-    }
+// 1a. Domain exception (if needed)
+public class SomeBusinessException extends DomainException {
+    public SomeBusinessException(String message) { super(message); }
 }
 
-// 1b. Port (Interface)
-public interface PasswordEncoder {
-    boolean matches(String rawPassword, String encodedPassword);
+// 1b. Port (if external I/O is needed)
+public interface NotificationService {
+    void send(String userId, String message);
 }
 
-// 1c. Use Case
-public class LoginUserUseCase {
+// 1c. Use case — pure business logic, no Spring
+public class SomeUseCase {
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    
-    public LoginUserUseCase(UserRepository repo, PasswordEncoder encoder) {
-        this.userRepository = repo;
-        this.passwordEncoder = encoder;
+    private final NotificationService notificationService;
+
+    public SomeUseCase(UserRepository repo, NotificationService notifications) {
+        this.userRepository = Objects.requireNonNull(repo);
+        this.notificationService = Objects.requireNonNull(notifications);
     }
-    
-    public User execute(String username, String password) {
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
-        
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            throw new InvalidCredentialsException("Invalid username or password");
-        }
-        return user;
+
+    public void execute(String userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new SomeBusinessException("User not found"));
+        // business logic
+        notificationService.send(userId, "Done");
     }
 }
 ```
 
-### Step 2: Implement Adapters (`neurixa-adapter`)
-Provide concrete implementations.
+### Step 2 — Adapter: Implement external concerns (`neurixa-adapter`)
 
 ```java
 @Component
-public class BcryptPasswordEncoder implements PasswordEncoder {
-    private final org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = 
-        new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
-    
+public class EmailNotificationService implements NotificationService {
     @Override
-    public boolean matches(String rawPassword, String encodedPassword) {
-        return encoder.matches(rawPassword, encodedPassword);
+    public void send(String userId, String message) {
+        // call email API here
     }
 }
 ```
 
-### Step 3: Wire and Expose (`neurixa-boot`)
-Use Spring to connect everything and create the API.
+### Step 3 — Boot: Wire and expose (`neurixa-boot`)
 
 ```java
-// 3a. Configuration Bean
+// 3a. Register use case as a Spring bean
 @Configuration
 public class UseCaseConfiguration {
     @Bean
-    public LoginUserUseCase loginUserUseCase(UserRepository repo, PasswordEncoder encoder) {
-        return new LoginUserUseCase(repo, encoder);
+    public SomeUseCase someUseCase(UserRepository repo, NotificationService notifications) {
+        return new SomeUseCase(repo, notifications);
     }
 }
 
-// 3b. REST Controller
+// 3b. REST controller
 @RestController
-@RequestMapping("/api/auth")
-public class AuthController {
-    private final LoginUserUseCase loginUserUseCase;
-    
-    public AuthController(LoginUserUseCase useCase) {
-        this.loginUserUseCase = useCase;
+@RequestMapping("/api/some")
+public class SomeController {
+    private final SomeUseCase someUseCase;
+
+    public SomeController(SomeUseCase someUseCase) {
+        this.someUseCase = someUseCase;
     }
-    
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req) {
-        User user = loginUserUseCase.execute(req.getUsername(), req.getPassword());
-        return ResponseEntity.ok(new LoginResponse(user));
+
+    @PostMapping("/{id}/action")
+    public ResponseEntity<MessageResponse> doAction(@PathVariable String id) {
+        someUseCase.execute(id);
+        return ResponseEntity.ok(new MessageResponse("Action completed"));
     }
 }
 ```
 
-This ensures separation: Core is testable without Spring, adapters are swappable.
-
 ---
 
-## 7. Testing Strategies in Hexagonal Architecture
+## 6. Testing Strategy
 
-Testing is easier with Hexagonal Architecture due to isolation.
+### Unit Tests (fastest — milliseconds)
+Test core use cases with mocked ports. No Spring context needed.
 
-### Unit Testing the Core
-Test business logic with mocks for ports.
 ```java
 @Test
-public void testLoginSuccess() {
-    // Arrange
+void successfulLogin() {
     UserRepository mockRepo = mock(UserRepository.class);
     PasswordEncoder mockEncoder = mock(PasswordEncoder.class);
-    when(mockRepo.findByUsername("user")).thenReturn(Optional.of(user));
-    when(mockEncoder.matches("pass", "hash")).thenReturn(true);
-    
+
+    when(mockRepo.findByUsername("john")).thenReturn(Optional.of(existingUser));
+    when(mockEncoder.matches("rawPass", "hashedPass")).thenReturn(true);
+
     LoginUserUseCase useCase = new LoginUserUseCase(mockRepo, mockEncoder);
-    
-    // Act
-    User result = useCase.execute("user", "pass");
-    
-    // Assert
-    assertEquals(user, result);
+    User result = useCase.execute("john", "rawPass");
+
+    assertEquals("john", result.getUsername());
 }
 ```
 
-### Integration Testing Adapters
-Test with real databases using test containers.
+### Integration Tests (adapter layer)
+Test with real databases using Testcontainers.
 
-### End-to-End Testing
-Test full flows via controllers.
+### End-to-End Tests (controller layer)
+Test full HTTP request/response cycle via `MockMvc` or `TestRestTemplate`.
 
-Benefits: Core tests run in milliseconds; adapters can be tested separately.
+### Where Each Test Lives
 
----
-
-## 8. Local Setup & Commands
-
-### Prerequisites
-- Java 21+
-- MongoDB (local or Docker on port 27017)
-- Redis (local or Docker on port 6379)
-
-### Building & Running
-```bash
-# Build and test all modules
-./gradlew build
-
-# Run the app in dev mode
-./gradlew :neurixa-boot:bootRun --args='--spring.profiles.active=dev'
-```
-
-### Testing Tips
-Run core tests quickly:
-```bash
-./gradlew :neurixa-core:test
-```
+| Test Type | Module | Dependencies |
+|-----------|--------|--------------|
+| Unit | `neurixa-core` | JUnit, AssertJ, Mockito only |
+| Integration | `neurixa-adapter` | Testcontainers + MongoDB/Redis |
+| E2E | `neurixa-boot` | `@SpringBootTest` |
 
 ---
 
-## 9. FAQ & Common Patterns
+## 7. Common Questions
 
-### Q: Why Hexagonal over traditional MVC?
-A: Hexagonal decouples business logic from frameworks, making it more testable and flexible.
+**Q: Why Hexagonal instead of layered MVC?**
+A: Layered MVC lets business logic bleed into controllers and repositories over time. Hexagonal enforces a hard boundary — the core is always testable without starting the full app.
 
-### Q: Where does validation go?
-A: 
-- **Business Validation:** In domain models (e.g., age > 18).
-- **Input Validation:** In DTOs with annotations (e.g., `@Email`).
+**Q: Where does validation go?**
+A: Two places. Input validation (format checks) goes in DTOs with `@NotBlank`, `@Email` etc. Business validation (age > 18, username uniqueness) goes in the domain model constructor or use case.
 
-### Q: How about DTOs?
-A: In `neurixa-boot`. Controllers map DTOs to domain objects and back.
+**Q: Where do transactions go?**
+A: On adapters, not use cases. Use cases orchestrate; adapters handle I/O concerns.
 
-### Q: Transactions?
-A: On adapters, not use cases.
+**Q: How do I handle cross-cutting concerns like logging?**
+A: Use Spring AOP in the adapter or config layer. Never put logging infrastructure in the core.
 
-### Q: How to handle cross-cutting concerns like logging?
-A: Use aspects in adapters or config, but keep core pure.
-
-### Q: SOLID in Hexagonal?
-A: Ports are interfaces (DIP), use cases have single responsibility, etc.
-
-### Q: Common mistakes?
-A: Putting Spring annotations in core or business logic in adapters.
-
----
-
-🎉 **You're equipped to build robust software!** Remember the Golden Rule and apply these principles to your projects. Happy coding!
+**Q: What common mistakes should I avoid?**
+A: Don't put Spring annotations (`@Autowired`, `@Component`) inside `neurixa-core`. Don't put business logic inside controllers or adapters.

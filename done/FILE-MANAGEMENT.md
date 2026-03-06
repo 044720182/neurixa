@@ -1,252 +1,292 @@
 # Neurixa File Management Module
 
-This guide explains the file upload and management capability added to Neurixa using clean, layered architecture. It is suitable for students and engineers learning how to build production-ready file storage with Spring Boot, Java, MongoDB, a pluggable StorageProvider (local filesystem now), and how to switch to AWS S3 later without refactoring business logic.
+## Table of Contents
+1. [Architecture Overview](#1-architecture-overview)
+2. [Data Model](#2-data-model)
+3. [REST API](#3-rest-api)
+4. [Local Storage](#4-local-storage)
+5. [Switching to AWS S3](#5-switching-to-aws-s3)
+6. [Security & Ownership](#6-security--ownership)
+7. [Troubleshooting](#7-troubleshooting)
 
 ---
 
-## What You Will Learn
-- How files and folders are modeled in a clean Domain (no frameworks)
-- How use cases orchestrate uploads, moves, renames, deletes, and listings
-- How MongoDB stores metadata while binaries go to a StorageProvider
-- How to switch from local filesystem to AWS S3 by implementing one interface
-- How to call the REST endpoints with cURL/Postman
+## 1. Architecture Overview
 
----
+The File Management module follows the same Hexagonal Architecture as the rest of Neurixa. Business logic lives in the core with zero framework dependencies; infrastructure concerns (MongoDB, filesystem, S3) are adapters.
 
-## Architecture Overview
+### Layers
 
-### Layers and Responsibilities
-- Domain (Core)
-  - Aggregates: `StoredFile` (file), `Folder`
-  - Entity: `FileVersion` (version history under a file)
-  - Value Objects: `FileId`, `FolderId`, `FileVersionId`, `Checksum`
-  - Enum: `FileStatus` = `UPLOADING | ACTIVE | DELETED`
-  - No Spring or Mongo annotations; only pure business rules and invariants.
-- Application (Core Use Cases)
-  - `UploadFileUseCase`, `CreateFolderUseCase`, `MoveFileUseCase`, `RenameFileUseCase`, `DeleteFileUseCase`, `ListFolderContentUseCase`
-  - Validates ownership and constraints, calls the storage abstraction, persists aggregates, and returns results.
-- Adapter (Infrastructure)
-  - MongoDB documents/repositories for `folders`, `files`, `file_versions`
-  - `LocalStorageProvider` implementation of `StorageProvider` (filesystem)
-- Boot (Delivery)
-  - REST controller for files/folders
-  - DTOs for requests and responses
-  - Bean configuration wiring use cases
+| Layer | Module | Contents |
+|-------|--------|----------|
+| Domain | `neurixa-core` | `StoredFile`, `Folder`, `FileVersion`, `FileStatus`, value objects (`FileId`, `FolderId`, `Checksum`) |
+| Use Cases | `neurixa-core` | `UploadFileUseCase`, `CreateFolderUseCase`, `MoveFileUseCase`, `RenameFileUseCase`, `DeleteFileUseCase`, `ListFolderContentUseCase` |
+| Ports | `neurixa-core` | `FileRepository`, `FolderRepository`, `StorageProvider` |
+| Adapters | `neurixa-adapter` | `MongoFileRepository`, `MongoFolderRepository`, `LocalStorageProvider` |
+| Delivery | `neurixa-boot` | `FileController`, `FolderController`, request/response DTOs |
 
 ### Storage Abstraction
-```
-interface StorageProvider {
-  String store(InputStream data, String filename);
-  InputStream retrieve(String storageKey);
-  void delete(String storageKey);
+
+The core only talks to one interface. This makes storage backends completely interchangeable.
+
+```java
+// In neurixa-core (port)
+public interface StorageProvider {
+    String store(InputStream data, String filename);    // returns storageKey
+    InputStream retrieve(String storageKey);
+    void delete(String storageKey);
 }
 ```
-Business logic talks only to `StorageProvider`. This allows swapping to S3/MinIO later without touching use cases.
+
+- **Now:** `LocalStorageProvider` writes to `~/neurixa-storage`
+- **Later:** `S3StorageProvider` writes to AWS S3 — **no use case changes required**
+
+### Upload Flow
+
+```
+Client sends multipart file to POST /api/files/upload
+  ↓
+FileController extracts authenticated user + optional folderId
+  ↓
+UploadFileUseCase:
+  1. Validates folder ownership (if folderId given)
+  2. Calls storageProvider.store() → returns storageKey
+  3. Creates StoredFile entity (status: UPLOADING → ACTIVE)
+  4. Creates FileVersion entity (version 1)
+  5. Saves both to MongoDB
+  ↓
+Controller returns 201 with FileResponse DTO
+```
 
 ---
 
-## Data Model (MongoDB)
+## 2. Data Model
 
-- Collections
-  - `folders`: ownerId, name, parentId, path (materialized path), deleted, timestamps
-  - `files`: ownerId, folderId, name, mimeType, size, status, currentVersion, deleted, timestamps
-  - `file_versions`: fileId, versionNumber, storageKey, size, checksum, createdAt
-- Rules
-  - Binary data is never stored in MongoDB
-  - Soft delete files (status `DELETED`, flag) to keep history and allow async cleanup
-  - `path` uses materialized paths to support nested folders efficiently
+Binary data is **never stored in MongoDB**. MongoDB holds only metadata; binary files live in the storage backend (filesystem or S3).
+
+### Collections
+
+#### `folders`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ownerId` | String | User ID — scoped to owner |
+| `name` | String | Folder display name |
+| `parentId` | String (nullable) | Parent folder ID; null = root |
+| `path` | String | Materialized path (e.g., `/Docs/Reports`) |
+| `deleted` | boolean | Soft delete flag |
+| `createdAt` | DateTime | |
+| `updatedAt` | DateTime | |
+
+#### `files`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ownerId` | String | User ID |
+| `folderId` | String (nullable) | Containing folder; null = root |
+| `name` | String | File display name |
+| `mimeType` | String | e.g., `text/markdown` |
+| `size` | long | Bytes |
+| `status` | Enum | `UPLOADING`, `ACTIVE`, `DELETED` |
+| `currentVersion` | int | Latest version number |
+| `deleted` | boolean | Soft delete flag |
+| `createdAt` | DateTime | |
+| `updatedAt` | DateTime | |
+
+#### `file_versions`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `fileId` | String | Parent file ID |
+| `versionNumber` | int | Incrementing version |
+| `storageKey` | String | Key used to locate the binary in storage |
+| `size` | long | Bytes |
+| `checksum` | String | Content hash for integrity |
+| `createdAt` | DateTime | |
+
+### Rules
+
+- Binary data never stored in MongoDB — only the `storageKey` pointer
+- Files are **soft-deleted** (status → `DELETED`, `deleted = true`) to preserve version history and allow async cleanup
+- `path` uses a materialized path pattern for efficient nested folder queries
+- All operations are scoped by `ownerId` — cross-user access is blocked at the use case level
 
 ### Recommended Indexes
-- folders: `ownerId`, `parentId`, `path`, compound `{ ownerId, parentId }`
-- files: `ownerId`, `folderId`, `status`, compound `{ ownerId, folderId }`
-- file_versions: `fileId`
 
----
+```javascript
+// folders
+db.folders.createIndex({ ownerId: 1 })
+db.folders.createIndex({ parentId: 1 })
+db.folders.createIndex({ path: 1 })
+db.folders.createIndex({ ownerId: 1, parentId: 1 })
 
-## REST Endpoints (JWT-protected)
+// files
+db.files.createIndex({ ownerId: 1 })
+db.files.createIndex({ folderId: 1 })
+db.files.createIndex({ status: 1 })
+db.files.createIndex({ ownerId: 1, folderId: 1 })
 
-Set Postman variables:
-- `base` = `http://localhost:8080`
-- `token` = your JWT (string)
-
-### Upload File
-Upload to root:
-```bash
-curl -X POST "{{base}}/api/files/upload" \
-  -H "Authorization: Bearer {{token}}" \
-  -F "file=@/absolute/path/to/file.ext"
-```
-Upload to a folder:
-```bash
-curl -X POST "{{base}}/api/files/upload?folderId=FOLDER_ID" \
-  -H "Authorization: Bearer {{token}}" \
-  -F "file=@/absolute/path/to/file.ext"
-```
-
-### Create Folder
-Root:
-```bash
-curl -X POST "{{base}}/api/folders" \
-  -H "Authorization: Bearer {{token}}" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"My Folder","parentId":null}'
-```
-Nested:
-```bash
-curl -X POST "{{base}}/api/folders" \
-  -H "Authorization: Bearer {{token}}" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Nested Folder","parentId":"PARENT_FOLDER_ID"}'
-```
-
-### List Folder Contents
-Root:
-```bash
-curl -X GET "{{base}}/api/folders/contents" \
-  -H "Authorization: Bearer {{token}}"
-```
-Specific folder:
-```bash
-curl -X GET "{{base}}/api/folders/contents?parentId=FOLDER_ID" \
-  -H "Authorization: Bearer {{token}}"
-```
-
-### Rename File
-```bash
-curl -X PUT "{{base}}/api/files/FILE_ID/rename" \
-  -H "Authorization: Bearer {{token}}" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"new-name.ext"}'
-```
-
-### Move File
-To a folder:
-```bash
-curl -X PUT "{{base}}/api/files/FILE_ID/move" \
-  -H "Authorization: Bearer {{token}}" \
-  -H "Content-Type: application/json" \
-  -d '{"targetFolderId":"TARGET_FOLDER_ID"}'
-```
-Back to root:
-```bash
-curl -X PUT "{{base}}/api/files/FILE_ID/move" \
-  -H "Authorization: Bearer {{token}}" \
-  -H "Content-Type: application/json" \
-  -d '{"targetFolderId":null}'
-```
-
-### Delete File (Soft Delete)
-```bash
-curl -X DELETE "{{base}}/api/files/FILE_ID" \
-  -H "Authorization: Bearer {{token}}"
+// file_versions
+db.file_versions.createIndex({ fileId: 1 })
 ```
 
 ---
 
-## Where Files Are Stored Now
-By default, binaries are written to the local filesystem via `LocalStorageProvider`:
-- Base folder: `~/neurixa-storage`
-- Config override: set `storage.local.root=/absolute/path` in application.yml
-- Storage keys are date-partitioned: `YYYY/MM/DD/<uuid>-<filename>`
-MongoDB stores only metadata and the `storageKey` pointing to the binary’s path.
+## 3. REST API
+
+All endpoints require JWT: `Authorization: Bearer <token>`.
+
+### Quick Reference
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/files/upload` | Upload a file |
+| `PUT` | `/api/files/{id}/rename` | Rename a file |
+| `PUT` | `/api/files/{id}/move` | Move a file |
+| `DELETE` | `/api/files/{id}` | Soft delete a file |
+| `POST` | `/api/folders` | Create a folder |
+| `GET` | `/api/folders/contents` | List folder contents |
+| `GET` | `/api/folders/contents/paged` | List folder contents (paginated) |
+
+See `API-DOCUMENTATION.md` for full request/response examples and cURL commands.
 
 ---
 
-## Switching to AWS S3 Later
+## 4. Local Storage
 
-You can swap the storage backend by implementing `StorageProvider` for S3 and wiring it as a Spring bean in the adapter layer.
+By default, binaries are stored on the local filesystem.
 
-### 1) Add Dependencies (adapter module)
-Gradle (Kotlin or Groovy syntax depending on your build):
+- **Root path:** `~/neurixa-storage` (override with `storage.local.root` in `application.yml`)
+- **Key format:** `YYYY/MM/DD/<uuid>-<filename>` (date-partitioned to avoid huge flat directories)
+- **MongoDB** stores only the `storageKey` string — the actual file lives at `<root>/<storageKey>`
+
+```yaml
+# application.yml
+storage:
+  local:
+    root: /absolute/path/to/storage   # optional override
+```
+
+---
+
+## 5. Switching to AWS S3
+
+When you're ready to move to S3, you only need to implement `StorageProvider`. No use case code changes.
+
+### Step 1 — Add AWS SDK dependency (`neurixa-adapter/build.gradle`)
+
 ```groovy
 implementation platform("software.amazon.awssdk:bom:2.25.58")
 implementation "software.amazon.awssdk:s3"
 ```
 
-### 2) Configure Credentials and Bucket
-Prefer AWS’ default credential chain (env vars, profile, IAM role). Minimal properties:
+### Step 2 — Configure credentials and bucket
+
+Use AWS's default credential chain (env vars, instance profile, IAM role — no hardcoded keys).
+
 ```yaml
+# application.yml
 s3:
   bucket: your-bucket-name
   region: us-east-1
 ```
 
-### 3) Implement S3StorageProvider
+### Step 3 — Implement `S3StorageProvider`
+
 ```java
 @Component
-@Primary // ensure this overrides LocalStorageProvider when present
+@Primary  // overrides LocalStorageProvider when present
 public class S3StorageProvider implements StorageProvider {
-  private final S3Client s3;
-  private final String bucket;
 
-  public S3StorageProvider(@Value("${s3.bucket}") String bucket,
-                           @Value("${s3.region}") String region) {
-    this.bucket = bucket;
-    this.s3 = S3Client.builder()
-        .region(Region.of(region))
-        .build(); // uses default credential provider chain
-  }
+    private final S3Client s3;
+    private final String bucket;
 
-  @Override
-  public String store(InputStream data, String filename) {
-    String key = buildKey(filename);
-    s3.putObject(builder -> builder.bucket(bucket).key(key).build(),
-                 RequestBody.fromInputStream(data, data.available()));
-    return key;
-  }
+    public S3StorageProvider(
+            @Value("${s3.bucket}") String bucket,
+            @Value("${s3.region}") String region) {
+        this.bucket = bucket;
+        this.s3 = S3Client.builder()
+            .region(Region.of(region))
+            .build();  // uses default credential provider chain
+    }
 
-  @Override
-  public InputStream retrieve(String storageKey) {
-    ResponseInputStream<GetObjectResponse> in =
-        s3.getObject(b -> b.bucket(bucket).key(storageKey));
-    return in;
-  }
+    @Override
+    public String store(InputStream data, String filename) {
+        String key = buildKey(filename);
+        s3.putObject(
+            b -> b.bucket(bucket).key(key).build(),
+            RequestBody.fromInputStream(data, data.available())
+        );
+        return key;
+    }
 
-  @Override
-  public void delete(String storageKey) {
-    s3.deleteObject(b -> b.bucket(bucket).key(storageKey));
-  }
+    @Override
+    public InputStream retrieve(String storageKey) {
+        return s3.getObject(b -> b.bucket(bucket).key(storageKey));
+    }
 
-  private String buildKey(String filename) {
-    String safe = filename == null || filename.isBlank() ? "file" : filename.replaceAll("[\\r\\n]", "_");
-    LocalDate d = LocalDate.now();
-    return d.getYear() + "/" + String.format("%02d", d.getMonthValue()) + "/" +
-           String.format("%02d", d.getDayOfMonth()) + "/" + UUID.randomUUID() + "-" + safe;
-  }
+    @Override
+    public void delete(String storageKey) {
+        s3.deleteObject(b -> b.bucket(bucket).key(storageKey));
+    }
+
+    private String buildKey(String filename) {
+        String safe = (filename == null || filename.isBlank())
+            ? "file"
+            : filename.replaceAll("[\\r\\n]", "_");
+        LocalDate d = LocalDate.now();
+        return String.format("%d/%02d/%02d/%s-%s",
+            d.getYear(), d.getMonthValue(), d.getDayOfMonth(),
+            UUID.randomUUID(), safe);
+    }
 }
 ```
 
-### 4) Activate S3
-- Ensure the S3 bean is picked up (e.g., `@Primary` on `S3StorageProvider`) or use a profile-based configuration:
-  - Add `@Profile("s3")` to S3 provider and run with `--spring.profiles.active=s3`
-- Remove or keep `LocalStorageProvider`; Spring will prefer the `@Primary` bean.
+### Step 4 — Activate
 
-### 5) Security & Cost Notes
-- Rely on IAM roles for credentials in production
-- Enable bucket policies for least privilege
-- Consider lifecycle rules and S3 storage classes to manage costs
+Option A — `@Primary` (always uses S3 when the bean is present):
+```java
+@Component
+@Primary
+public class S3StorageProvider implements StorageProvider { ... }
+```
+
+Option B — Spring Profile (explicit activation):
+```java
+@Component
+@Profile("s3")
+public class S3StorageProvider implements StorageProvider { ... }
+```
+```bash
+java -jar neurixa-boot.jar --spring.profiles.active=s3
+```
+
+### S3 Security & Cost Notes
+
+- **Credentials:** Use IAM roles (EC2/ECS instance profiles) in production — never hardcode access keys
+- **Bucket policy:** Apply least-privilege bucket policies; block public access
+- **Lifecycle rules:** Configure S3 storage classes and lifecycle rules to manage costs (e.g., move old versions to Glacier)
+- **Encryption:** Enable SSE-S3 or SSE-KMS for server-side encryption
 
 ---
 
-## Ownership & Security
-- All file and folder requests are scoped by the authenticated user (ownerId)
-- Controllers resolve the current user and pass `UserId` to use cases
-- Cross-user access is not allowed; folders are validated for ownership before uploads or moves
-- Authentication and RBAC stay untouched; file APIs inherit `/api/**` protections
+## 6. Security & Ownership
+
+- Every file and folder operation is scoped to the authenticated user's `ownerId`
+- Controllers resolve the current user from the JWT principal and pass a `UserId` to use cases
+- Cross-user access (e.g., accessing another user's file by guessing an ID) is rejected at the use case level — ownership is validated before any operation
+- File APIs inherit the `/api/**` JWT protection from the main security configuration — no extra auth setup needed
 
 ---
 
-## Troubleshooting
-- 401 Unauthorized: Ensure you pass a valid `Authorization: Bearer <token>`
-- Mongo connection: verify `spring.data.mongodb.uri`
-- Local filesystem: set `storage.local.root` if default path is not writable
-- S3 errors: verify bucket name/region, IAM permissions, and network access
+## 7. Troubleshooting
 
----
-
-## Learning Takeaways
-- Clean Architecture makes storage pluggable and testable
-- Keep domain pure and externalize IO to adapters
-- Use materialized paths for nested folders at scale
-- Soft delete and version entities to support future recovery and auditing
-
+| Problem | Likely Cause | Fix |
+|---------|-------------|-----|
+| `401 Unauthorized` | Missing or expired JWT | Ensure `Authorization: Bearer <token>` is set |
+| `404` on folder upload | Wrong `folderId` or not owned by user | Verify folder exists and belongs to your account |
+| Files not appearing | Upload in `UPLOADING` status | Check that use case completed; look for errors in logs |
+| `Cannot write to storage` | Local path not writable | Set `storage.local.root` to a writable directory |
+| S3 `NoSuchBucket` | Wrong bucket name or region | Verify `s3.bucket` and `s3.region` in config |
+| S3 `AccessDenied` | IAM permissions missing | Grant `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` on the bucket |
+| MongoDB connection error | DB not running | Check `spring.data.mongodb.uri` and verify DB is reachable |
