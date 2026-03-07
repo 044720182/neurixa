@@ -12,7 +12,6 @@
 
 // On the login page we call the auth endpoint directly with a raw fetch
 // so that a 401 (wrong credentials) is NOT auto-redirected by api.js.
-import { ApiError } from '../core/api.js';
 import { setToken, decodeToken } from '../core/token.js';
 import { redirectIfAuthenticated } from '../components/guard.js';
 
