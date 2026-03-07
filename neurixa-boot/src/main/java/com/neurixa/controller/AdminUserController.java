@@ -6,6 +6,7 @@ import com.neurixa.core.exception.InvalidUserStateException;
 import com.neurixa.core.usecase.*;
 import com.neurixa.dto.request.ChangeUserRoleRequest;
 import com.neurixa.dto.request.UpdateUserRequest;
+import com.neurixa.dto.response.PageResponse;
 import com.neurixa.dto.response.AdminUserResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -33,12 +34,30 @@ public class AdminUserController {
     private final ResetFailedLoginUseCase resetFailedLoginUseCase;
     private final GetUserByUsernameUseCase getUserByUsernameUseCase;
     private final ChangeUserRoleUseCase changeUserRoleUseCase;
+    private final GetUsersUseCase getUsersUseCase;
 
     @GetMapping
-    public ResponseEntity<List<AdminUserResponse>> listUsers() {
-        List<User> users = listUsersUseCase.execute();
-        List<AdminUserResponse> response = users.stream().map(this::toAdminUserResponse).toList();
-        return ResponseEntity.ok(response);
+    public ResponseEntity<PageResponse<AdminUserResponse>> listUsers(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Boolean locked,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection
+    ) {
+        com.neurixa.core.domain.Page<User> userPage =
+                getUsersUseCase.execute(search, role, locked, page, size, sortBy, sortDirection);
+        List<AdminUserResponse> content = userPage.getContent().stream().map(this::toAdminUserResponse).toList();
+        return ResponseEntity.ok(new PageResponse<>(
+                content,
+                userPage.getPageNumber(),
+                userPage.getPageSize(),
+                userPage.getTotalElements(),
+                userPage.getTotalPages(),
+                userPage.hasNext(),
+                userPage.hasPrevious()
+        ));
     }
 
     @GetMapping("/me")

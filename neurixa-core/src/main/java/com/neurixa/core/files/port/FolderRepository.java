@@ -12,5 +12,8 @@ public interface FolderRepository {
     Optional<Folder> findByIdAndOwner(FolderId id, UserId ownerId);
     List<Folder> findChildren(UserId ownerId, FolderId parentId);
     List<Folder> findRoots(UserId ownerId);
+    List<Folder> findChildren(UserId ownerId, FolderId parentId, int page, int size);
+    List<Folder> findRoots(UserId ownerId, int page, int size);
+    long countChildren(UserId ownerId, FolderId parentId);
+    long countRoots(UserId ownerId);
 }
-

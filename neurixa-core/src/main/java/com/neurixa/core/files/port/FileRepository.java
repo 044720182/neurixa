@@ -12,5 +12,6 @@ public interface FileRepository {
     StoredFile save(StoredFile file);
     Optional<StoredFile> findByIdAndOwner(FileId id, UserId ownerId);
     List<StoredFile> findByFolder(UserId ownerId, FolderId folderId);
+    List<StoredFile> findByFolder(UserId ownerId, FolderId folderId, int page, int size);
+    long countByFolder(UserId ownerId, FolderId folderId);
 }
-

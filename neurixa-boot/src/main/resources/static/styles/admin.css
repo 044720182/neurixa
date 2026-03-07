@@ -1,0 +1,301 @@
+/**
+ * admin.css — Shared styles for the Neurixa Admin UI.
+ *
+ * Covers:
+ *  - CSS custom properties (design tokens)
+ *  - Login page layout and form
+ *  - Dashboard sidebar and main content
+ *  - Utility classes (spinner, toast container, badges)
+ *  - Responsive breakpoints
+ */
+
+/* ─── Design tokens ──────────────────────────────────────────────────────── */
+:root {
+  --color-bg:           #121212;
+  --color-surface:      #1e1e1e;
+  --color-surface-alt:  #2a2a2a;
+  --color-border:       #333333;
+  --color-text:         #e0e0e0;
+  --color-text-muted:   #a0a0a0;
+  --color-primary:      #007bff;
+  --color-primary-dark: #0056b3;
+  --color-danger:       #ff4d4d;
+  --color-success:      #28a745;
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg: 12px;
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.45);
+  --transition:  0.2s ease;
+}
+
+/* ─── Base reset ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  color: var(--color-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOGIN PAGE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+body.page-login {
+  background-color: var(--color-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.login-container {
+  background-color: var(--color-surface);
+  padding: 40px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  width: 360px;
+  text-align: center;
+}
+
+.login-container h1 {
+  color: #ffffff;
+  margin-bottom: 6px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.login-container .brand {
+  color: var(--color-primary);
+  font-weight: 600;
+  margin-bottom: 28px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Form groups */
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  transition: border-color var(--transition);
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.18);
+}
+
+/* Submit button */
+.btn-login {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background-color: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: background-color var(--transition);
+}
+
+.btn-login:hover:not(:disabled) { background-color: var(--color-primary-dark); }
+
+.btn-login:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+/* Error message */
+.error-message {
+  color: var(--color-danger);
+  margin-top: 14px;
+  font-size: 13px;
+  min-height: 20px;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPINNER (shared between login & dashboard)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.spinner {
+  display: inline-block;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  width: 16px;
+  height: 16px;
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DASHBOARD — SIDEBAR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sidebar {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.82);
+  padding: 0.7rem 1.25rem;
+  margin: 2px 0;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition), color var(--transition), transform var(--transition);
+  font-size: 14px;
+}
+
+.sidebar .nav-link:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.12);
+  transform: translateX(4px);
+}
+
+.sidebar .nav-link.active {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.22);
+  font-weight: 600;
+}
+
+.sidebar .nav-link i { margin-right: 8px; width: 18px; }
+
+.sidebar .submenu { padding-left: 1.75rem; }
+
+.sidebar .submenu .nav-link {
+  padding: 0.45rem 1rem;
+  font-size: 13px;
+}
+
+/* User info card in sidebar */
+.user-info {
+  background-color: rgba(255, 255, 255, 0.12);
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 auto 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DASHBOARD — MAIN CONTENT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.main-content {
+  background-color: #f4f6f9;
+  min-height: 100vh;
+}
+
+/* Stat cards */
+.stats-card {
+  border: none;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.stats-card:hover {
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.45);
+  transform: translateY(-2px);
+}
+
+.stats-card .card-body { padding: 1.75rem; }
+
+.stats-card h3 {
+  font-size: 2.4rem;
+  font-weight: 300;
+  margin-bottom: 4px;
+}
+
+.stats-card p { font-size: 13px; opacity: 0.9; margin: 0; }
+
+/* General card refinements */
+.card {
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  transition: box-shadow var(--transition);
+}
+
+.card:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOAST CONTAINER
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#toastContainer {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 280px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 767.98px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 260px;
+    z-index: 1040;
+    transition: left 0.3s ease;
+  }
+
+  .sidebar.show { left: 0; }
+
+  .main-content { margin-left: 0; }
+}
+

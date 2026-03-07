@@ -18,11 +18,13 @@ import com.neurixa.dto.request.CreateFolderRequest;
 import com.neurixa.dto.request.MoveFileRequest;
 import com.neurixa.dto.request.RenameFileRequest;
 import com.neurixa.dto.response.FileResponse;
+import com.neurixa.dto.response.FolderContentPageResponse;
 import com.neurixa.dto.response.FolderContentResponse;
 import com.neurixa.dto.response.FolderResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +48,8 @@ public class FileController {
     private final RenameFileUseCase renameFileUseCase;
     private final MoveFileUseCase moveFileUseCase;
     private final DeleteFileUseCase deleteFileUseCase;
+    @Autowired(required = false)
+    private com.neurixa.core.files.usecase.ListFolderContentPagedUseCase listFolderContentPagedUseCase;
 
     @PostMapping(path = "/files/upload", consumes = {"multipart/form-data"})
     public ResponseEntity<FileResponse> upload(@RequestPart("file") MultipartFile file,
@@ -86,6 +90,34 @@ public class FileController {
         List<FolderResponse> folders = content.folders().stream().map(this::toFolderResponse).toList();
         List<FileResponse> files = content.files().stream().map(this::toFileResponse).toList();
         return ResponseEntity.ok(new FolderContentResponse(folders, files));
+    }
+
+    @GetMapping("/folders/contents/paged")
+    public ResponseEntity<FolderContentPageResponse> listContentsPaged(@RequestParam(value = "parentId", required = false) String parentId,
+                                                                       @RequestParam(defaultValue = "0") int pageFolders,
+                                                                       @RequestParam(defaultValue = "20") int sizeFolders,
+                                                                       @RequestParam(defaultValue = "0") int pageFiles,
+                                                                       @RequestParam(defaultValue = "20") int sizeFiles,
+                                                                       Principal principal) {
+        User user = getUserByUsernameUseCase.execute(principal.getName());
+        UserId ownerId = user.getId();
+        FolderId parent = parentId != null && !parentId.isBlank() ? new FolderId(parentId) : null;
+        com.neurixa.core.files.domain.FolderContentPaged content = listFolderContentPagedUseCase.execute(ownerId, parent, pageFolders, sizeFolders, pageFiles, sizeFiles);
+        List<FolderResponse> folders = content.folders().stream().map(this::toFolderResponse).toList();
+        List<FileResponse> files = content.files().stream().map(this::toFileResponse).toList();
+        com.neurixa.dto.response.PageResponse<FolderResponse> foldersPage = new com.neurixa.dto.response.PageResponse<>(
+                folders, pageFolders, sizeFolders, content.totalFolders(),
+                (int) Math.ceil((double) content.totalFolders() / Math.max(sizeFolders, 1)),
+                pageFolders < (int) Math.ceil((double) content.totalFolders() / Math.max(sizeFolders, 1)) - 1,
+                pageFolders > 0
+        );
+        com.neurixa.dto.response.PageResponse<FileResponse> filesPage = new com.neurixa.dto.response.PageResponse<>(
+                files, pageFiles, sizeFiles, content.totalFiles(),
+                (int) Math.ceil((double) content.totalFiles() / Math.max(sizeFiles, 1)),
+                pageFiles < (int) Math.ceil((double) content.totalFiles() / Math.max(sizeFiles, 1)) - 1,
+                pageFiles > 0
+        );
+        return ResponseEntity.ok(new FolderContentPageResponse(foldersPage, filesPage));
     }
 
     @PutMapping("/files/{id}/rename")
@@ -135,4 +167,3 @@ public class FileController {
         );
     }
 }
-
