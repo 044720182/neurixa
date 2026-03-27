@@ -1,129 +1,156 @@
-# Neurixa: Your Gateway to Hexagonal Architecture with Spring Boot
+# Neurixa: Pintu Gerbang Anda ke Arsitektur Hexagonal dengan Spring Boot
 
-Welcome, junior developer! 🎉 **Neurixa** is a hands-on project designed to teach you modern software architecture while building a real-world application. If you're new to Spring Boot, microservices, or clean code principles, this is the perfect starting point. We'll guide you through setting up, running, and understanding a **Hexagonal Architecture** (also called Ports and Adapters) in a multi-module Spring Boot app.
+Selamat datang, pengembang junior! 🎉 **Neurixa** adalah proyek praktis yang dirancang untuk mengajarkan Anda arsitektur perangkat lunak modern sambil membangun aplikasi dunia nyata. Jika Anda baru mengenal Spring Boot, mikroservis, atau prinsip clean code, ini adalah titik awal yang sempurna. Kami akan memandu Anda melalui pengaturan, menjalankan, dan memahami **Arsitektur Hexagonal** (juga disebut Ports and Adapters) dalam aplikasi Spring Boot multi-modul.
 
-By the end, you'll have a working user management system with authentication, and you'll understand how to structure code that's maintainable, testable, and scalable.
-
----
-
-## 🚀 What is Neurixa?
-
-Neurixa is a **user management API** built with Spring Boot. It handles user registration, login, role management, and more. But more importantly, it's a learning tool for **Hexagonal Architecture**—a way to organize code so business logic stays pure and separate from databases, web frameworks, or external services.
-
-### Key Features
-- User registration and authentication (JWT-based)
-- Role-based access control (USER, ADMIN, SUPER_ADMIN)
-- Secure endpoints with dual security chains
-- MongoDB for data storage, Redis for caching
-- RESTful API with OpenAPI documentation
-
-### What You'll Learn
-- **Hexagonal Architecture:** Separate core business logic from infrastructure.
-- **Spring Boot Basics:** Controllers, beans, configurations.
-- **Security:** JWT tokens, role-based permissions.
-- **Testing:** Unit and integration tests.
-- **Best Practices:** Clean code, SOLID principles, dependency injection.
-- **Tools:** Gradle, MongoDB, Redis, Swagger UI.
-
-Don't worry if these terms are new—we'll explain them step by step!
+Di akhirnya, Anda akan memiliki sistem manajemen pengguna yang berfungsi dengan autentikasi, dan Anda akan memahami cara menyusun kode yang dapat dipelihara, dapat diuji, dan dapat diskalakan.
 
 ---
 
-## 📋 Prerequisites
+## 🚀 Apa itu Neurixa?
 
-Before diving in, make sure you have these installed. We'll keep it simple!
+Neurixa adalah **API manajemen pengguna** yang dibangun dengan Spring Boot. Ini menangani pendaftaran pengguna, login, manajemen peran, dan lainnya. Namun yang lebih penting, ini adalah alat pembelajaran untuk **Arsitektur Hexagonal**—cara mengorganisir kode sehingga logika bisnis tetap murni dan terpisah dari database, framework web, atau layanan eksternal.
+
+### Fitur Utama
+- Pendaftaran pengguna dan autentikasi (berbasis JWT)
+- Kontrol akses berbasis peran (USER, ADMIN, SUPER_ADMIN)
+- Endpoint aman dengan rantai keamanan ganda
+- MongoDB untuk penyimpanan data, Redis untuk caching
+- API RESTful dengan dokumentasi OpenAPI
+
+### Apa yang Akan Anda Pelajari
+- **Arsitektur Hexagonal:** Pisahkan logika bisnis inti dari infrastruktur.
+- **Dasar-Dasar Spring Boot:** Controller, bean, konfigurasi.
+- **Keamanan:** Token JWT, izin berbasis peran.
+- **Pengujian:** Pengujian unit dan integrasi.
+- **Praktik Terbaik:** Kode bersih, prinsip SOLID, injeksi dependensi.
+- **Alat:** Gradle, MongoDB, Redis, Swagger UI.
+
+Jangan khawatir jika istilah-istilah ini baru—kami akan jelaskan langkah demi langkah!
+
+---
+
+## 📋 Prasyarat
+
+Sebelum mulai, pastikan Anda telah menginstal yang berikut. Kami akan menjaganya tetap sederhana!
 
 ### 1. Java 21
-- Download from [Oracle JDK](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html) or use [SDKMAN](https://sdkman.io/).
-- Verify: `java -version` (should show Java 21).
+- Unduh dari [Oracle JDK](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html) atau gunakan [SDKMAN](https://sdkman.io/).
+- Verifikasi: `java -version` (harus menunjukkan Java 21).
 
 ### 2. Gradle 8.5+
-- Comes with the project (Gradle Wrapper), but install globally if needed: [Gradle Install Guide](https://gradle.org/install/).
-- Verify: `./gradlew --version`.
+- Sudah disertakan dalam proyek (Gradle Wrapper), tetapi instal secara global jika diperlukan: [Panduan Instal Gradle](https://gradle.org/install/).
+- Verifikasi: `./gradlew --version`.
 
 ### 3. MongoDB (Database)
-- Install locally: [MongoDB Community Server](https://www.mongodb.com/try/download/community).
-- Or use Docker: `docker run -d -p 27017:27017 --name mongodb mongo:latest`.
-- Runs on `localhost:27017` by default.
+- Instal secara lokal: [MongoDB Community Server](https://www.mongodb.com/try/download/community).
+- Atau gunakan Docker: `docker run -d -p 27017:27017 --name mongodb mongo:latest`.
+- Berjalan di `localhost:27017` secara default.
 
 ### 4. Redis (Cache)
-- Install locally: [Redis Download](https://redis.io/download).
-- Or use Docker: `docker run -d -p 6379:6379 --name redis redis:latest`.
-- Runs on `localhost:6379` by default.
+- Instal secara lokal: [Unduhan Redis](https://redis.io/download).
+- Atau gunakan Docker: `docker run -d -p 6379:6379 --name redis redis:latest`.
+- Berjalan di `localhost:6379` secara default.
 
-### Optional: IDE
-- Use IntelliJ IDEA, VS Code, or Eclipse with Java support.
+### Opsional: IDE
+- Gunakan IntelliJ IDEA, VS Code, atau Eclipse dengan dukungan Java.
 
 ---
 
-## 🏁 Quick Start: Get Neurixa Running in 5 Minutes
+## 🏁 Mulai Cepat: Jalankan Neurixa dalam 5 Menit
 
-Follow these steps to launch the app locally.
+Ikuti langkah-langkah ini untuk meluncurkan aplikasi secara lokal.
 
-### Step 1: Clone and Navigate
+### Langkah 1: Klon dan Navigasi
 ```bash
-git clone <your-repo-url>  # Replace with actual repo URL
+git clone <url-repo-anda>  # Ganti dengan URL repo sebenarnya
 cd neurixa
 ```
 
-### Step 2: Start Dependencies
-Ensure MongoDB and Redis are running (see Prerequisites).
+### Langkah 2: Mulai Dependensi
+Pastikan MongoDB dan Redis berjalan (lihat Prasyarat).
 
-### Step 3: Build the Project
+### Langkah 3: Bangun Proyek
 ```bash
 ./gradlew build
 ```
-This compiles code, runs tests, and packages everything. If it fails, check your Java version or dependencies.
+Ini mengkompilasi kode, menjalankan pengujian, dan mengemas semuanya. Jika gagal, periksa versi Java atau dependensi.
 
-### Step 4: Run the App (Development Mode)
+### Langkah 4: Jalankan Aplikasi (Mode Pengembangan)
 ```bash
 ./gradlew :neurixa-boot:bootRun --args='--spring.profiles.active=dev'
 ```
-- This uses `application-dev.yml` for easy local setup.
-- App starts on `http://localhost:8080`.
+- Ini menggunakan `application-dev.yml` untuk pengaturan lokal yang mudah.
+- Aplikasi dimulai di `http://localhost:8080`.
 
-### Step 5: Verify It's Working
-Open in browser: `http://localhost:8080/actuator/health`
+### Langkah 5: Verifikasi Berfungsi
+Buka di browser: `http://localhost:8080/actuator/health`
 
-You should see: `{"status":"UP"}`
+Anda harus melihat: `{"status":"UP"}`
 
-### Step 6: Explore the API
-- Swagger UI: `http://localhost:8080/swagger-ui.html` (auto-generated docs).
-- Register a user: Use the `/api/auth/register` endpoint in Swagger.
+### Langkah 6: Jelajahi API
+- Swagger UI: `http://localhost:8080/swagger-ui.html` (dokumentasi yang dihasilkan otomatis).
+- Daftar pengguna: Gunakan endpoint `/api/auth/register` di Swagger.
 
-Congrats! 🎊 Your first Hexagonal app is running. Now, let's understand what you built.
+Selamat! 🎊 Aplikasi Hexagonal pertama Anda berjalan. Sekarang, mari pahami apa yang Anda bangun.
 
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ Ikhtisar Arsitektur
 
-Neurixa uses **Hexagonal Architecture** to keep code clean. Think of it like a phone: the core (battery/phone logic) doesn't care about the charger type—it just needs power through a standard port.
+Neurixa menggunakan **Arsitektur Hexagonal** untuk menjaga kode tetap bersih. Bayangkan seperti ponsel: inti (baterai/logika ponsel) tidak peduli dengan jenis charger—ia hanya membutuhkan daya melalui port standar.
 
-### The Modules
-We split the app into 4 modules for clarity:
+### Apa itu Arsitektur Hexagonal?
+Arsitektur Hexagonal (juga disebut Ports and Adapters) diperkenalkan oleh Alistair Cockburn. Ini adalah pola arsitektur yang menekankan decoupling (pemisahan) antara logika bisnis inti aplikasi dan infrastruktur eksternal seperti database, framework web, atau layanan pihak ketiga.
+
+- **Hexagon (Inti Aplikasi):** Mewakili logika bisnis murni. Ini tidak bergantung pada teknologi spesifik.
+- **Ports:** Antarmuka (interface) yang mendefinisikan bagaimana aplikasi berinteraksi dengan dunia luar. Ada dua jenis:
+  - **Driving Ports:** Untuk input (misalnya, controller HTTP yang menerima permintaan dari pengguna).
+  - **Driven Ports:** Untuk output (misalnya, repository untuk menyimpan data).
+- **Adapters:** Implementasi konkret dari ports. Mereka menghubungkan ports ke teknologi nyata, seperti MongoDB adapter untuk penyimpanan data atau REST adapter untuk API web.
+
+Manfaat utama:
+- **Mudah Diuji:** Logika bisnis dapat diuji tanpa database atau framework.
+- **Fleksibel:** Ganti database dari MongoDB ke PostgreSQL hanya dengan mengubah adapter.
+- **Dapat Dipelihara:** Kode terorganisir dan mudah dibaca.
+
+### Apa itu Clean Architecture?
+Clean Architecture diperkenalkan oleh Robert C. Martin (Uncle Bob) dan merupakan evolusi dari Arsitektur Hexagonal. Ini menambahkan struktur lapisan yang lebih eksplisit untuk memisahkan tanggung jawab.
+
+Lapisan utama (dari dalam ke luar):
+1. **Entities (Entitas):** Objek domain murni yang mewakili konsep bisnis (misalnya, User, Comment). Tidak bergantung pada framework.
+2. **Use Cases (Kasus Penggunaan):** Logika aplikasi yang mengatur interaksi antara entitas. Ini adalah "aturan bisnis" yang mendefinisikan apa yang aplikasi lakukan (misalnya, RegisterUserUseCase).
+3. **Interface Adapters:** Lapisan yang menghubungkan use cases ke dunia luar. Termasuk controller (untuk web), presenters, dan repositories (implementasi ports).
+4. **Frameworks & Drivers:** Lapisan terluar, termasuk framework seperti Spring Boot, database, dan alat eksternal.
+
+Clean Architecture menekankan "Dependency Inversion Principle" (DIP): Lapisan dalam tidak bergantung pada lapisan luar; sebaliknya, lapisan luar bergantung pada abstraksi (ports) dari lapisan dalam.
+
+Hubungan dengan Hexagonal: Clean Architecture mengadopsi konsep ports dan adapters dari Hexagonal, tetapi membuatnya lebih terstruktur dengan lapisan eksplisit. Dalam praktik, keduanya sering digunakan bersama.
+
+### Modul-Modul di Neurixa
+Kami membagi aplikasi menjadi 4 modul untuk kejelasan, yang sesuai dengan prinsip Clean Architecture dan Hexagonal:
 
 ```mermaid
 graph TD
-    subgraph Core["neurixa-core (Domain Logic)"]
-        CoreEntities[Domain Entities]
-        CoreUseCases[Use Cases]
-        CorePorts[Port Interfaces]
+    subgraph Core["neurixa-core (Logika Domain)"]
+        CoreEntities[Entitas Domain]
+        CoreUseCases[Kasus Penggunaan]
+        CorePorts[Antarmuka Port]
     end
 
-    subgraph Adapter["neurixa-adapter (Infrastructure)"]
-        MongoRepo[MongoDB Repository]
-        RedisCache[Redis Cache]
-        SpringData[Spring Data Repositories]
+    subgraph Adapter["neurixa-adapter (Infrastruktur)"]
+        MongoRepo[Repository MongoDB]
+        RedisCache[Cache Redis]
+        SpringData[Repository Spring Data]
     end
 
-    subgraph Config["neurixa-config (Security)"]
-        JWTProvider[JWT Token Provider]
-        SecurityChains[Dual SecurityFilterChain]
+    subgraph Config["neurixa-config (Keamanan)"]
+        JWTProvider[Penyedia Token JWT]
+        SecurityChains[Rantai Keamanan Ganda]
     end
 
-    subgraph Boot["neurixa-boot (Spring Boot Entry)"]
-        MainApp[Main Application Class]
-        BeanConfig[Use‑case Bean Configuration]
+    subgraph Boot["neurixa-boot (Entry Spring Boot)"]
+        MainApp[Kelas Aplikasi Utama]
+        BeanConfig[Konfigurasi Bean Kasus Penggunaan]
     end
 
     CoreEntities --> CoreUseCases
@@ -133,43 +160,44 @@ graph TD
     Config --> Boot
 ```
 
-- **neurixa-core**: Pure business logic (no Spring or DB code). Defines what users are and how to register them.
-- **neurixa-adapter**: Connects core to real tech (e.g., saves users to MongoDB).
-- **neurixa-config**: Handles security (JWT, roles).
-- **neurixa-boot**: Ties everything together and starts the app.
+- **neurixa-core**: Logika bisnis murni (tanpa kode Spring atau DB). Mendefinisikan apa itu pengguna dan bagaimana mendaftarkannya. Ini adalah inti hexagon, sesuai dengan Entities dan Use Cases di Clean Architecture.
+- **neurixa-adapter**: Menghubungkan inti ke teknologi nyata (misalnya, menyimpan pengguna ke MongoDB). Ini adalah adapters yang mengimplementasikan ports, sesuai dengan Interface Adapters.
+- **neurixa-config**: Menangani keamanan (JWT, peran). Bagian dari infrastruktur, tetapi terpisah untuk fokus.
+- **neurixa-boot**: Mengikat semuanya bersama dan memulai aplikasi. Ini adalah lapisan Frameworks & Drivers.
 
-### Why This Matters
-- **Easy Testing:** Test business logic without databases.
-- **Flexible:** Swap MongoDB for PostgreSQL by changing only the adapter.
-- **Maintainable:** Code is organized and readable.
+### Mengapa Ini Penting
+- **Mudah Diuji:** Uji logika bisnis tanpa database.
+- **Fleksibel:** Tukar MongoDB dengan PostgreSQL hanya dengan mengubah adapter.
+- **Dapat Dipelihara:** Kode terorganisir dan mudah dibaca.
+- **Contoh Praktis:** Dalam Neurixa, `RegisterUserUseCase` di `neurixa-core` tidak tahu tentang MongoDB—ia hanya menggunakan port `UserRepository`. Adapter di `neurixa-adapter` menyediakan implementasi MongoDB.
 
-For deep dives, read [ARCHITECTURE.md](done/ARCHITECTURE.md)—it's a full guide!
+Untuk penyelaman mendalam, baca [ARCHITECTURE.md](done/ARCHITECTURE.md)—ini adalah panduan lengkap!
 
 ---
 
-## 🔧 Building and Running in Detail
+## 🔧 Membangun dan Menjalankan Secara Detail
 
-### Build Commands
+### Perintah Build
 ```bash
-# Full build with tests
+# Build penuh dengan pengujian
 ./gradlew build
 
-# Skip tests (faster)
+# Lewati pengujian (lebih cepat)
 ./gradlew build -x test
 
-# Clean and rebuild
+# Bersihkan dan bangun ulang
 ./gradlew clean build
 ```
 
-### Run Commands
-- **Dev Mode (Recommended for beginners):**
+### Perintah Jalankan
+- **Mode Dev (Direkomendasikan untuk pemula):**
   ```bash
   ./gradlew :neurixa-boot:bootRun --args='--spring.profiles.active=dev'
   ```
-  Uses relaxed settings for local dev.
+  Menggunakan pengaturan santai untuk dev lokal.
 
-- **Production Mode:**
-  Set a JWT secret (secure random string):
+- **Mode Produksi:**
+  Atur rahasia JWT (string acak aman):
   ```bash
   # macOS/Linux
   JWT_SECRET="$(openssl rand -base64 32)" ./gradlew :neurixa-boot:bootRun
@@ -179,57 +207,57 @@ For deep dives, read [ARCHITECTURE.md](done/ARCHITECTURE.md)—it's a full guide
   ./gradlew :neurixa-boot:bootRun
 
   # Windows CMD
-  set JWT_SECRET=your-32-bytes-minimum-secret
+  set JWT_SECRET=rahasia-anda-minimal-32-byte
   gradlew :neurixa-boot:bootRun
   ```
 
-### Profiles
-- `dev`: Local development (default Mongo/Redis).
-- `default`: Production-ready (needs env vars).
+### Profil
+- `dev`: Pengembangan lokal (Mongo/Redis default).
+- `default`: Siap produksi (butuh variabel env).
 
-### Troubleshooting
-- **Port in use?** Change ports in `application.yml`.
-- **MongoDB connection error?** Ensure MongoDB is running: `brew services start mongodb/brew/mongodb-community` (macOS).
-- **Redis error?** Start Redis: `redis-server`.
-- **Build fails?** Check Java version and run `./gradlew --version`.
-
----
-
-## 📖 API Documentation
-
-- **Swagger UI:** Interactive docs at `http://localhost:8080/swagger-ui.html`. Test endpoints directly!
-- **Detailed API Guide:** [API-DOCUMENTATION.md](done/API-DOCUMENTATION.md)
-- **Curl Examples:** [CURL-ROLE-MANAGEMENT.md](done/CURL-ROLE-MANAGEMENT.md)
-
-### Security Notes
-- `/api/auth/**`: Public (register, login).
-- `/api/**`: Needs JWT token (from login).
-- `/admin/**`: Needs ROLE_ADMIN.
-
-Example: Login to get a token, then use it in headers: `Authorization: Bearer <token>`
+### Pemecahan Masalah
+- **Port digunakan?** Ubah port di `application.yml`.
+- **Kesalahan koneksi MongoDB?** Pastikan MongoDB berjalan: `brew services start mongodb/brew/mongodb-community` (macOS).
+- **Kesalahan Redis?** Mulai Redis: `redis-server`.
+- **Build gagal?** Periksa versi Java dan jalankan `./gradlew --version`.
 
 ---
 
-## 🎯 Next Steps for Learning
+## 📖 Dokumentasi API
 
-1. **Explore the Code:** Open `neurixa-core`—see how `User` entity and `RegisterUserUseCase` work.
-2. **Add a Feature:** Try adding a "Change Password" endpoint. Follow the steps in [ARCHITECTURE.md](done/ARCHITECTURE.md).
-3. **Write Tests:** Look at `neurixa-core/src/test` for examples.
-4. **Contribute:** Fix a bug or improve docs—submit a PR!
-5. **Resources:**
-   - [Spring Boot Docs](https://spring.io/projects/spring-boot)
-   - [Hexagonal Architecture Explained](https://alistair.cockburn.us/hexagonal-architecture/)
-   - [JWT Guide](https://jwt.io/introduction/)
+- **Swagger UI:** Dokumentasi interaktif di `http://localhost:8080/swagger-ui.html`. Uji endpoint langsung!
+- **Panduan API Detail:** [API-DOCUMENTATION.md](done/API-DOCUMENTATION.md)
+- **Contoh Curl:** [CURL-ROLE-MANAGEMENT.md](done/CURL-ROLE-MANAGEMENT.md)
+
+### Catatan Keamanan
+- `/api/auth/**`: Publik (daftar, login).
+- `/api/**`: Butuh token JWT (dari login).
+- `/admin/**`: Butuh ROLE_ADMIN.
+
+Contoh: Login untuk mendapatkan token, lalu gunakan di header: `Authorization: Bearer <token>`
 
 ---
 
-## 🆘 Support and FAQ
+## 🎯 Langkah Selanjutnya untuk Belajar
 
-- **Stuck?** Check [ARCHITECTURE.md](done/ARCHITECTURE.md) or [RUN-APPLICATION.md](done/RUN-APPLICATION.md).
-- **Common Issues:**
-  - Q: "Gradle build fails"? A: Ensure Java 21 and run `./gradlew clean`.
-  - Q: "App won't start"? A: Check MongoDB/Redis are running.
-  - Q: "403 Forbidden"? A: You need the right role or JWT token.
-- **Contact:** Open an issue in the repo or ask in discussions.
+1. **Jelajahi Kode:** Buka `neurixa-core`—lihat bagaimana entitas `User` dan `RegisterUserUseCase` bekerja.
+2. **Tambah Fitur:** Coba tambah endpoint "Ubah Kata Sandi". Ikuti langkah di [ARCHITECTURE.md](done/ARCHITECTURE.md).
+3. **Tulis Pengujian:** Lihat `neurixa-core/src/test` untuk contoh.
+4. **Kontribusi:** Perbaiki bug atau tingkatkan docs—kirim PR!
+5. **Sumber Daya:**
+   - [Dokumentasi Spring Boot](https://spring.io/projects/spring-boot)
+   - [Penjelasan Arsitektur Hexagonal](https://alistair.cockburn.us/hexagonal-architecture/)
+   - [Panduan JWT](https://jwt.io/introduction/)
 
-Happy coding! 🚀 If you build something cool, share it. Let's make software better together.
+---
+
+## 🆘 Dukungan dan FAQ
+
+- **Tersendat?** Periksa [ARCHITECTURE.md](done/ARCHITECTURE.md) atau [RUN-APPLICATION.md](done/RUN-APPLICATION.md).
+- **Masalah Umum:**
+  - Q: "Build Gradle gagal"? A: Pastikan Java 21 dan jalankan `./gradlew clean`.
+  - Q: "Aplikasi tidak mulai"? A: Periksa MongoDB/Redis berjalan.
+  - Q: "403 Forbidden"? A: Anda butuh peran atau token JWT yang benar.
+- **Kontak:** Buka issue di repo atau tanya di diskusi.
+
+Selamat coding! 🚀 Jika Anda membangun sesuatu yang keren, bagikan. Mari buat perangkat lunak lebih baik bersama.
