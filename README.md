@@ -127,7 +127,7 @@ Clean Architecture menekankan "Dependency Inversion Principle" (DIP): Lapisan da
 Hubungan dengan Hexagonal: Clean Architecture mengadopsi konsep ports dan adapters dari Hexagonal, tetapi membuatnya lebih terstruktur dengan lapisan eksplisit. Dalam praktik, keduanya sering digunakan bersama.
 
 ### Modul-Modul di Neurixa
-Kami membagi aplikasi menjadi 4 modul untuk kejelasan, yang sesuai dengan prinsip Clean Architecture dan Hexagonal:
+Kami membagi aplikasi menjadi beberapa modul Gradle (antara lain **neurixa-core**, **neurixa-domain**, **neurixa-application**, **neurixa-adapter**, **neurixa-config**, **neurixa-boot**) agar sesuai dengan prinsip Clean Architecture dan Hexagonal. Diagram berikut menyoroti alur utama inti ↔ adapter ↔ boot:
 
 ```mermaid
 graph TD
@@ -160,10 +160,95 @@ graph TD
     Config --> Boot
 ```
 
-- **neurixa-core**: Logika bisnis murni (tanpa kode Spring atau DB). Mendefinisikan apa itu pengguna dan bagaimana mendaftarkannya. Ini adalah inti hexagon, sesuai dengan Entities dan Use Cases di Clean Architecture.
+- **neurixa-core**: Logika bisnis murni (tanpa kode Spring atau DB) untuk bounded context “platform” seperti pengguna dan manajemen file—Entities, Use Cases, dan Ports di Clean Architecture.
+- **neurixa-domain**: Model domain, invariant, dan antarmuka repository untuk bounded context fitur (saat ini blog). Tanpa framework; dipakai oleh **neurixa-application**.
+- **neurixa-application**: Use case yang mengorkestrasi alur fitur di atas **neurixa-domain** (misalnya blog). Tanpa Spring.
 - **neurixa-adapter**: Menghubungkan inti ke teknologi nyata (misalnya, menyimpan pengguna ke MongoDB). Ini adalah adapters yang mengimplementasikan ports, sesuai dengan Interface Adapters.
-- **neurixa-config**: Menangani keamanan (JWT, peran). Bagian dari infrastruktur, tetapi terpisah untuk fokus.
+- **neurixa-config**: Kebijakan keamanan terpusat (JWT, Spring Security, blacklist token)—bukan endpoint HTTP.
 - **neurixa-boot**: Mengikat semuanya bersama dan memulai aplikasi. Ini adalah lapisan Frameworks & Drivers.
+
+### Peran neurixa-domain, neurixa-adapter, dan neurixa-config
+
+Tiga modul ini melengkapi **inti** (core + application) dan **titik masuk** (boot): domain menyimpan *apa* yang valid dalam bisnis; adapter menyimpan *bagaimana* data disimpan dan layanan teknis dihubungkan; config menyimpan *bagaimana* permintaan dilindungi dan diotentikasi.
+
+#### neurixa-domain
+
+**Peran:** Menampung **model domain** dan **kontrak keluar** (*driven ports*) untuk bounded context fitur tertentu—tanpa framework.
+
+- Isi tipikal: agregat dan value object (`Article`, `Slug`, …), invariant dan transisi status, event domain bila ada, serta antarmuka seperti `ArticleRepository` / `CommentRepository` (hanya kontrak, bukan implementasi MongoDB).
+- **Bukan tempat untuk:** anotasi Spring/JPA, kelas `*Document`, query driver, atau use case panjang (itu di **neurixa-application**).
+- **Siapa yang bergantung padanya:** **neurixa-application** mengimpor domain untuk menjalankan alur; **neurixa-adapter** mengimplementasikan port repository ke MongoDB.
+
+Dalam repo ini, blog memakai **neurixa-domain** sebagai “kamus” bisnis artikel, kategori, tag, dan komentar. Bounded context platform (pengguna, file) tetap di **neurixa-core** dengan paketnya sendiri—bukan di modul `neurixa-domain`.
+
+#### neurixa-adapter
+
+**Peran:** **Adapter terdorong** (*driven side*): menghubungkan port dari **neurixa-core** dan **neurixa-domain** ke teknologi konkret.
+
+- Isi tipikal: implementasi repository Spring Data MongoDB, dokumen persistensi (`*Document`), mapper domain ↔ persistensi, penyedia penyimpanan file (misalnya penyimpanan lokal), adapter encoder kata sandi, konfigurasi MongoDB yang spesifik adapter.
+- **Bukan tempat untuk:** aturan bisnis baru (tetap di core/application/domain); aturan “siapa boleh akses URL mana” (itu **neurixa-config** + mapping di **neurixa-boot**); controller REST (itu **neurixa-boot**).
+- **Dependensi:** Modul ini memang sengaja memuat Spring Boot, driver MongoDB, Redis, dll., karena tugasnya adalah “kabel” ke dunia luar.
+
+Dengan memisahkan adapter, inti tetap bisa diuji dengan *fake* repository; mengganti MongoDB atau strategi file hanya menyentuh modul ini dan wiring di boot.
+
+#### neurixa-config
+
+**Peran:** **Konfigurasi keamanan aplikasi** yang dapat dipakai bersama oleh proses yang dijalankan **neurixa-boot**: pembuatan/validasi JWT, filter otentikasi, blacklist token (misalnya lewat Redis), titik masuk untuk respons 401, serta susunan **Spring Security** (rantai filter, izin per pola URL) sesuai kebijakan proyek.
+
+- **Bukan tempat untuk:** definisi entitas domain; implementasi repository database (itu **neurixa-adapter**); daftar endpoint REST atau DTO JSON (itu **neurixa-boot**).
+- **Mengapa modul terpisah:** Supaya kebijakan auth terkonsentrasi dan tidak bercampur dengan kode persistensi atau controller. Boot meng-*import* konfigurasi ini sebagai bagian dari komposisi aplikasi.
+
+Ringkasnya: **domain** = bahasa dan aturan data; **adapter** = teknologi simpan–ambil dan integrasi; **config** = gatekeeper identitas dan otorisasi di sisi framework.
+
+### Kapan kode di neurixa-core, kapan di neurixa-application?
+
+Ini pertanyaan yang sering muncul saat menambah fitur. Jawaban singkatnya: **letakkan di *core* jika itu kemampuan platform yang reusable dan bebas framework; letakkan di *application* jika itu orkestrasi fitur bisnis yang mengikat model di *neurixa-domain*.**
+
+#### Inti keputusan
+
+| | **neurixa-core** | **neurixa-application** |
+|---|------------------|-------------------------|
+| **Peran** | “Mesin” platform: pengguna, file, dan use case lain yang **tidak** mengasumsikan satu produk bisnis tertentu (blog, toko, dll.). | “Lapisan aplikasi” untuk satu area fitur: mengatur alur kerja di atas **agregat dan port** yang didefinisikan di **neurixa-domain**. |
+| **Dependensi** | Hanya JDK (dan alat uji). **Tidak** ada Spring, driver DB, atau library infrastruktur. | Bergantung pada **neurixa-domain** (entitas, invariant, port repository). **Tidak** bergantung pada Spring. |
+| **Contoh di repo** | Manajemen file (`UploadFileUseCase`, `FileRepository`), domain pengguna di `com.neurixa.core`. | Blog: `CreateArticleUseCase`, `PublishArticleUseCase` yang memakai `Article`, `ArticleRepository` dari domain blog. |
+
+#### Tanya tiga hal ini
+
+1. **Apakah ini aturan / kemampuan yang masuk akal dipakai ulang oleh fitur lain** (misalnya upload file untuk avatar, lampiran artikel, dokumen admin) **tanpa** mengetahui konteks “blog” atau “artikel”? Kalau **ya** → biasanya **neurixa-core** (plus port di core, implementasi di adapter).
+2. **Apakah ini alur yang mengikat satu bounded context produk** (misalnya draf → terbit → komentar) dengan entitas yang hidup di **neurixa-domain**? Kalau **ya** → **neurixa-application**.
+3. **Apakah kodenya perlu import Spring, anotasi JPA, atau klien HTTP?** Kalau **ya** → **bukan** core maupun application mentah; letakkan infrastruktur di **neurixa-adapter** / konfigurasi di **neurixa-config** / titik masuk HTTP di **neurixa-boot**.
+
+#### Hubungan dengan neurixa-domain
+
+- **neurixa-domain** menyimpan model domain, invariant, dan *antarmuka* repository untuk suatu area (contoh: blog). **neurixa-application** hanya boleh bergantung pada domain, bukan sebaliknya.
+- **neurixa-core** memuat bounded context lain (pengguna, file) yang dipandang sebagai fondasi platform. Fitur blog tidak perlu “masuk” ke core kecuali Anda sengaja mengekstrak ulang konsep yang benar-benar generik.
+
+Jika ragu: mulai dari **domain** (entitas + port), lalu tambahkan use case tipis di **application**. Pindahkan ke **core** hanya ketika Anda yakin abstraksinya stabil dan reusable lintas fitur.
+
+#### Kasus sejenis (agar konsisten ke depan)
+
+| Pertanyaan | Arah yang wajar |
+|------------|-----------------|
+| **Port / interface repository** untuk MongoDB vs memori? | Definisikan port di **domain** atau **core** (sesuai bounded context); implementasi konkret di **neurixa-adapter**. |
+| **Controller REST atau DTO response**? | **neurixa-boot** (bukan core/application). |
+| **JWT, SecurityFilterChain, bean Spring**? | **neurixa-config** atau **neurixa-boot**, bukan core/application. |
+| **Fitur baru selain blog** (misalnya inventaris) dengan model sendiri? | Modul **neurixa-domain** baru (atau paket domain baru) + use case di **neurixa-application** (atau submodul serupa), adapter di **neurixa-adapter**, wiring di **neurixa-boot**. |
+| **Logika yang sama muncul di dua fitur application**? | Pertimbangkan mengekstrak ke **core** *hanya jika* benar-benar generik; jika tidak, pertahankan dekat salah satu bounded context atau perkenalkan modul domain bersama yang jelas batasannya. |
+
+### Contoh Pemisahan Fitur untuk Separation of Concerns
+Contoh konkret di repositori ini:
+
+- **File Management (di neurixa-core/files)**: Penyimpanan file (upload, rename, pindah, hapus) adalah kemampuan platform. Entitas seperti `StoredFile`, use case seperti `UploadFileUseCase`, dan port seperti `FileRepository` ada di **core**—tanpa Spring—sehingga fitur lain (blog, profil, dll.) bisa memakainya lewat port yang sama.
+
+- **Blog / artikel (di neurixa-domain + neurixa-application/blog)**: Membuat draf, menerbitkan artikel, mengelola komentar adalah **alur fitur** di atas model `Article`, `Comment`, dll. Model dan kontrak repository ada di **neurixa-domain**; orkestrasi seperti `CreateArticleUseCase`, `PublishArticleUseCase` ada di **neurixa-application**. Lampiran artikel nanti bisa memanggil use case file di **core** tanpa mencampur aturan blog ke modul file.
+
+Pemisahan ini memastikan:
+- **Decoupling**: Blog bisa menggunakan file tanpa coupling ketat—misalnya, artikel bisa upload gambar via file management.
+- **Reusability**: File management bisa digunakan oleh fitur lain tanpa duplikasi kode.
+- **Maintainability**: Perubahan pada blog tidak memengaruhi file, dan sebaliknya.
+- **Testability**: Uji file management secara independen dari blog.
+
+Ini adalah contoh praktis bagaimana Clean Architecture mendorong modularitas untuk aplikasi yang scalable.
 
 ### Mengapa Ini Penting
 - **Mudah Diuji:** Uji logika bisnis tanpa database.
