@@ -16,8 +16,9 @@ public class LoginUserUseCase {
         this.passwordEncoder = Objects.requireNonNull(passwordEncoder, "PasswordEncoder cannot be null");
     }
 
-    public User execute(String username, String rawPassword) {
-        User user = userRepository.findByUsername(username)
+    public User execute(String usernameOrEmail, String rawPassword) {
+        User user = userRepository.findByUsername(usernameOrEmail)
+                .or(() -> userRepository.findByEmail(usernameOrEmail))
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
         if (user.isLocked()) {
