@@ -64,11 +64,15 @@ curl -X POST http://localhost:8080/api/auth/register \
 
 ### POST `/api/auth/login`
 
-Authenticate and receive a JWT.
+Authenticate and receive a JWT. Accepts either username or email.
 
 **Request:**
 ```json
 { "username": "john_doe", "password": "securePassword123" }
+```
+or
+```json
+{ "username": "john@example.com", "password": "securePassword123" }
 ```
 
 **200 OK:** Same response shape as `/register`
@@ -76,9 +80,15 @@ Authenticate and receive a JWT.
 **Error codes:** `400` validation failed · `401` invalid credentials
 
 ```bash
+# Login with username
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"john_doe","password":"securePassword123"}'
+
+# Login with email
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"john@example.com","password":"securePassword123"}'
 ```
 
 ---

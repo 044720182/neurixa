@@ -120,9 +120,43 @@ curl -X POST http://localhost:8080/api/auth/register \
 ### Login
 
 ```bash
+# Login with username
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"john_doe","password":"password123"}'
+
+# Login with email
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"john@example.com","password":"password123"}'
+```
+
+### Dev Default Users (profile: dev)
+
+When running with `--spring.profiles.active=dev`, the following users are automatically seeded on startup:
+
+| Role | Username | Password | Email |
+|------|----------|----------|-------|
+| SUPER_ADMIN | superadmin | superadmin123 | superadmin@dev.local |
+| ADMIN | admin | admin123 | admin@dev.local |
+| USER | user | user123 | user@dev.local |
+
+```bash
+# Login as admin (username or email both work)
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+
+# Reset dev DB and re-seed (drops all collections)
+./reset-dev-db.sh
+```
+
+Controlled via `application-dev.yml`:
+```yaml
+neurixa:
+  seed:
+    enabled: true          # false = skip seeder
+    reset-on-start: true   # true = drop all users and re-seed on every startup
 ```
 
 ### Use a Protected Endpoint

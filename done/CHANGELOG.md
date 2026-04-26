@@ -4,6 +4,40 @@ A summary of every development phase: what was built, why decisions were made, a
 
 ---
 
+## Phase 5 — Login with Email + Dev Seeder
+
+**Commit:** `9d84027`
+**Goal:** Support login via email in addition to username, and establish a consistent dev environment with auto-seeded users.
+
+### What Was Added
+
+**Login with email (`LoginUserUseCase`):**
+- `execute()` now tries `findByUsername` first, then falls back to `findByEmail`
+- `LoginRequest` validation message updated to reflect "username or email"
+- `login.html` label and placeholder updated to "Username or Email"
+
+**DevDataSeeder (`neurixa-boot`):**
+- Active only on profile `dev` via `@Profile("dev")`
+- Seeds 3 default users on every startup if they don't exist
+- Controlled by `neurixa.seed.enabled` and `neurixa.seed.reset-on-start` flags
+- `reset-on-start: true` drops all users and re-seeds on every startup — ensures a clean, predictable state when returning to the project
+
+| Role | Username | Password |
+|------|----------|----------|
+| SUPER_ADMIN | superadmin | superadmin123 |
+| ADMIN | admin | admin123 |
+| USER | user | user123 |
+
+**`reset-dev-db.sh`:**
+- Shell script to manually drop all dev collections (users, files, folders, articles, etc.)
+- Prompts for confirmation before dropping
+
+**Tests added:**
+- `shouldLoginWithEmail` — verifies email fallback path
+- `shouldThrowExceptionWhenNeitherUsernameNorEmailFound` — verifies both lookups fail correctly
+
+---
+
 ## Phase 1 — Project Foundation
 
 **Commit:** `e718097 be7ca18`  

@@ -42,8 +42,23 @@ class LoginUserUseCaseTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenUsernameNotFound() {
+    void shouldLoginWithEmail() {
+        User user = User.createNew("john_doe", "john@example.com", "hashedPassword", Role.USER);
+        when(userRepository.findByUsername("john@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password", "hashedPassword")).thenReturn(true);
+
+        User result = useCase.execute("john@example.com", "password");
+
+        assertThat(result).isNotNull();
+        assertThat(result.getUsername()).isEqualTo("john_doe");
+        assertThat(result.getEmail()).isEqualTo("john@example.com");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenNeitherUsernameNorEmailFound() {
         when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("unknown")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.execute("unknown", "password"))
                 .isInstanceOf(InvalidCredentialsException.class)
