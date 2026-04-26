@@ -8,6 +8,7 @@
 5. [Adding a New Feature](#5-adding-a-new-feature)
 6. [Testing Strategy](#6-testing-strategy)
 7. [Common Questions](#7-common-questions)
+8. [Transactional Boundaries](#8-transactional-boundaries)
 
 ---
 
@@ -301,3 +302,78 @@ A: Use Spring AOP in the adapter or config layer. Never put logging infrastructu
 
 **Q: What common mistakes should I avoid?**
 A: Don't put Spring annotations (`@Autowired`, `@Component`) inside `neurixa-core`. Don't put business logic inside controllers or adapters.
+
+---
+
+## 8. Transactional Boundaries
+
+### Which Use Cases Need Transactions
+
+Only use cases that perform **more than one write operation** need transaction protection.
+
+| Use Case | Writes | Wrapped In |
+|----------|--------|------------|
+| `UploadFileUseCase` | `fileRepository.save()` + `fileVersionRepository.save()` | `@Transactional` on `FileController.upload()` |
+| `LoginUserUseCase` | `userRepository.save()` × 2 (failed attempt + reset counter) | `@Transactional` on `AuthController.login()` |
+| All other use cases | 1 write | No transaction needed |
+
+### Why @Transactional Is on the Controller, Not the Core
+
+The core module has zero Spring dependencies by design. Adding `@Transactional` there would violate the hexagonal-lite rule. Instead, the annotation lives on the controller method — the outermost layer that owns the operation boundary.
+
+```java
+// FileController.java
+@Transactional  // ← wraps the entire upload operation
+@PostMapping(path = "/files/upload", ...)
+public ResponseEntity<FileResponse> upload(...) {
+    // UploadFileUseCase calls fileRepository.save() + fileVersionRepository.save()
+    // If fileVersionRepository.save() fails, fileRepository.save() is rolled back
+}
+```
+
+### MongoDB Replica Set Requirement
+
+MongoDB multi-document transactions (across multiple collections) **require a replica set or sharded cluster**. A standalone `mongod` does not support them.
+
+**What happens without a replica set:**
+- `@Transactional` annotations are silently ignored
+- Writes still happen, but without atomicity
+- If `fileVersionRepository.save()` fails after `fileRepository.save()` succeeds, you get an orphaned file record
+
+**Dev setup with replica set (Docker):**
+
+```bash
+# Start MongoDB as a single-node replica set
+docker run -d -p 27017:27017 --name neurixa-mongo \
+  mongo:latest --replSet rs0 --bind_ip_all
+
+# Initialise the replica set (run once)
+docker exec neurixa-mongo mongosh --eval "rs.initiate()"
+
+# Verify
+docker exec neurixa-mongo mongosh --eval "rs.status()"
+```
+
+**application-dev.yml** — update URI to include `replicaSet` param if needed:
+
+```yaml
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/neurixa?replicaSet=rs0
+```
+
+**Production:** Use MongoDB Atlas (replica set by default) or a self-hosted 3-node replica set.
+
+### MongoTransactionManager
+
+`MongoConfig` registers a `MongoTransactionManager` bean which Spring uses to back `@Transactional`:
+
+```java
+@Bean
+public MongoTransactionManager transactionManager(MongoDatabaseFactory dbFactory) {
+    return new MongoTransactionManager(dbFactory);
+}
+```
+
+Without this bean, `@Transactional` would have no effect even on a replica set.

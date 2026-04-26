@@ -1,6 +1,9 @@
 spring:
   data:
     mongodb:
+      # For @Transactional support, MongoDB must run as a replica set.
+      # Standalone mongod silently ignores transactions.
+      # Dev replica set setup: see done/ARCHITECTURE.md § Transactional Boundaries
       uri: mongodb://localhost:27017/neurixa
     redis:
       host: 127.0.0.1

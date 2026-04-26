@@ -18,6 +18,7 @@ import com.neurixa.dto.request.CreateFolderRequest;
 import com.neurixa.dto.request.MoveFileRequest;
 import com.neurixa.dto.request.RenameFileRequest;
 import com.neurixa.dto.response.FileResponse;
+import org.springframework.transaction.annotation.Transactional;
 import com.neurixa.dto.response.FolderContentPageResponse;
 import com.neurixa.dto.response.FolderContentResponse;
 import com.neurixa.dto.response.FolderResponse;
@@ -51,6 +52,9 @@ public class FileController {
     @Autowired(required = false)
     private com.neurixa.core.files.usecase.ListFolderContentPagedUseCase listFolderContentPagedUseCase;
 
+    // Writes to fileRepository AND fileVersionRepository — must be atomic.
+    // Requires MongoDB replica set for true transaction support.
+    @Transactional
     @PostMapping(path = "/files/upload", consumes = {"multipart/form-data"})
     public ResponseEntity<FileResponse> upload(@RequestPart("file") MultipartFile file,
                                                @RequestParam(value = "folderId", required = false) String folderId,
