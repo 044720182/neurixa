@@ -27,3 +27,6 @@ neurixa:
   storage:
     local:
       root: /tmp/neurixa-storage-dev
+  seed:
+    enabled: true       # set false jika tidak mau auto-seed saat startup
+    reset-on-start: true   # drop semua users dulu lalu seed ulang setiap startup
