@@ -4,26 +4,28 @@ import com.neurixa.domain.blog.Comment;
 import com.neurixa.domain.blog.CommentId;
 import com.neurixa.domain.blog.CommentRepository;
 import com.neurixa.domain.blog.CommentStatus;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class CommentCommandServiceTest {
 
-    private CommentRepository commentRepository;
-    private CommentCommandService service;
+    @Mock
+    CommentRepository commentRepository;
 
-    @BeforeEach
-    void setUp() {
-        commentRepository = mock(CommentRepository.class);
-        service = new CommentCommandService(commentRepository);
-    }
+    @InjectMocks
+    CommentCommandService service;
 
     // ── add ───────────────────────────────────────────────────────────────────
 
@@ -33,10 +35,9 @@ class CommentCommandServiceTest {
 
         Comment result = service.add(articleId, "Alice", "alice@example.com", "Great post!", null);
 
-        assertThat(result).isNotNull();
         assertThat(result.getAuthorName()).isEqualTo("Alice");
         assertThat(result.getStatus()).isEqualTo(CommentStatus.PENDING);
-        verify(commentRepository).save(result);
+        verify(commentRepository).save(argThat(c -> c.getStatus() == CommentStatus.PENDING));
     }
 
     @Test
@@ -79,7 +80,7 @@ class CommentCommandServiceTest {
         Comment result = service.approve(id);
 
         assertThat(result.getStatus()).isEqualTo(CommentStatus.APPROVED);
-        verify(commentRepository).save(comment);
+        verify(commentRepository).save(argThat(c -> c.getStatus() == CommentStatus.APPROVED));
     }
 
     @Test
@@ -115,7 +116,7 @@ class CommentCommandServiceTest {
         Comment result = service.reject(id);
 
         assertThat(result.getStatus()).isEqualTo(CommentStatus.REJECTED);
-        verify(commentRepository).save(comment);
+        verify(commentRepository).save(argThat(c -> c.getStatus() == CommentStatus.REJECTED));
     }
 
     @Test
@@ -150,9 +151,7 @@ class CommentCommandServiceTest {
 
         service.delete(id);
 
-        assertThat(comment.isDeleted()).isTrue();
-        assertThat(comment.getStatus()).isEqualTo(CommentStatus.DELETED);
-        verify(commentRepository).save(comment);
+        verify(commentRepository).save(argThat(c -> c.isDeleted() && c.getStatus() == CommentStatus.DELETED));
     }
 
     @Test

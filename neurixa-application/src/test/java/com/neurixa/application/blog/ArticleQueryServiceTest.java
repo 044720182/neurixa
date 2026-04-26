@@ -3,8 +3,11 @@ package com.neurixa.application.blog;
 import com.neurixa.domain.blog.Article;
 import com.neurixa.domain.blog.ArticleRepository;
 import com.neurixa.domain.blog.Slug;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,31 +16,32 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class ArticleQueryServiceTest {
 
-    private ArticleRepository articleRepository;
-    private ArticleQueryService service;
+    @Mock
+    ArticleRepository articleRepository;
 
-    @BeforeEach
-    void setUp() {
-        articleRepository = mock(ArticleRepository.class);
-        service = new ArticleQueryService(articleRepository);
-    }
+    @InjectMocks
+    ArticleQueryService service;
 
     @Test
     void shouldGetArticleBySlug() {
         Article article = Article.createDraft("Hello World", "Content", "excerpt");
-        when(articleRepository.findBySlug(new Slug("hello-world"))).thenReturn(Optional.of(article));
+        // derive slug from domain — don't hardcode the slug generation logic
+        Slug slug = article.getSlug();
+        when(articleRepository.findBySlug(slug)).thenReturn(Optional.of(article));
 
-        Article result = service.getBySlug("hello-world");
+        Article result = service.getBySlug(slug.getValue());
 
-        assertThat(result).isNotNull();
         assertThat(result.getTitle()).isEqualTo("Hello World");
+        verify(articleRepository).findBySlug(slug);
     }
 
     @Test
     void shouldThrowWhenArticleNotFoundBySlug() {
-        when(articleRepository.findBySlug(new Slug("not-found"))).thenReturn(Optional.empty());
+        Slug slug = new Slug("not-found");
+        when(articleRepository.findBySlug(slug)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getBySlug("not-found"))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -72,6 +76,13 @@ class ArticleQueryServiceTest {
         long count = service.countPublished();
 
         assertThat(count).isEqualTo(42L);
+    }
+
+    @Test
+    void shouldReturnZeroWhenNoPublishedArticles() {
+        when(articleRepository.countPublished()).thenReturn(0L);
+
+        assertThat(service.countPublished()).isZero();
     }
 
     @Test

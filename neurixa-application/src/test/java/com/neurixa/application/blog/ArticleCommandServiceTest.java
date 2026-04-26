@@ -4,27 +4,28 @@ import com.neurixa.domain.blog.Article;
 import com.neurixa.domain.blog.ArticleId;
 import com.neurixa.domain.blog.ArticleRepository;
 import com.neurixa.domain.blog.ArticleStatus;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class ArticleCommandServiceTest {
 
-    private ArticleRepository articleRepository;
-    private ArticleCommandService service;
+    @Mock
+    ArticleRepository articleRepository;
 
-    @BeforeEach
-    void setUp() {
-        articleRepository = mock(ArticleRepository.class);
-        service = new ArticleCommandService(articleRepository);
-    }
+    @InjectMocks
+    ArticleCommandService service;
 
     // ── createDraft ──────────────────────────────────────────────────────────
 
@@ -32,10 +33,9 @@ class ArticleCommandServiceTest {
     void shouldCreateDraftArticle() {
         Article result = service.createDraft("Hello World", "Content here", "Short excerpt");
 
-        assertThat(result).isNotNull();
         assertThat(result.getTitle()).isEqualTo("Hello World");
         assertThat(result.getStatus()).isEqualTo(ArticleStatus.DRAFT);
-        verify(articleRepository).save(result);
+        verify(articleRepository).save(argThat(a -> a.getStatus() == ArticleStatus.DRAFT));
     }
 
     @Test
@@ -63,7 +63,7 @@ class ArticleCommandServiceTest {
 
         assertThat(result.getStatus()).isEqualTo(ArticleStatus.PUBLISHED);
         assertThat(result.getPublishedAt()).isNotNull();
-        verify(articleRepository).save(draft);
+        verify(articleRepository).save(argThat(a -> a.getStatus() == ArticleStatus.PUBLISHED));
     }
 
     @Test
@@ -100,7 +100,7 @@ class ArticleCommandServiceTest {
 
         assertThat(result.getTitle()).isEqualTo("New Title");
         assertThat(result.getContent()).isEqualTo("New content");
-        verify(articleRepository).save(draft);
+        verify(articleRepository).save(argThat(a -> a.getTitle().equals("New Title")));
     }
 
     @Test
@@ -135,9 +135,7 @@ class ArticleCommandServiceTest {
 
         service.delete(id);
 
-        assertThat(draft.isDeleted()).isTrue();
-        assertThat(draft.getStatus()).isEqualTo(ArticleStatus.DELETED);
-        verify(articleRepository).save(draft);
+        verify(articleRepository).save(argThat(a -> a.isDeleted() && a.getStatus() == ArticleStatus.DELETED));
     }
 
     @Test
@@ -174,7 +172,7 @@ class ArticleCommandServiceTest {
         Article result = service.archive(id);
 
         assertThat(result.getStatus()).isEqualTo(ArticleStatus.ARCHIVED);
-        verify(articleRepository).save(article);
+        verify(articleRepository).save(argThat(a -> a.getStatus() == ArticleStatus.ARCHIVED));
     }
 
     @Test
@@ -201,7 +199,7 @@ class ArticleCommandServiceTest {
 
         assertThat(result.isDeleted()).isFalse();
         assertThat(result.getStatus()).isEqualTo(ArticleStatus.DRAFT);
-        verify(articleRepository).save(draft);
+        verify(articleRepository).save(argThat(a -> !a.isDeleted() && a.getStatus() == ArticleStatus.DRAFT));
     }
 
     @Test
@@ -213,5 +211,16 @@ class ArticleCommandServiceTest {
         assertThatThrownBy(() -> service.restore(id))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Only a deleted article can be restored");
+    }
+
+    // ── incrementViewCount ────────────────────────────────────────────────────
+
+    @Test
+    void shouldDelegateIncrementViewCountToRepository() {
+        UUID id = UUID.randomUUID();
+
+        service.incrementViewCount(id);
+
+        verify(articleRepository).incrementViewCountAtomic(new ArticleId(id));
     }
 }
