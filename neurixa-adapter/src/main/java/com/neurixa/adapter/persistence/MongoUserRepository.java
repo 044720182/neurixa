@@ -4,6 +4,8 @@ import com.neurixa.core.domain.User;
 import com.neurixa.core.domain.UserId;
 import com.neurixa.core.port.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -13,6 +15,10 @@ import java.util.Optional;
 @Repository
 @RequiredArgsConstructor
 public class MongoUserRepository implements UserRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(MongoUserRepository.class);
+    private static final long SLOW_QUERY_MS = 200;
+
     private final UserMongoRepository mongoRepository;
     private final org.springframework.data.mongodb.core.MongoTemplate mongoTemplate;
 
@@ -73,7 +79,6 @@ public class MongoUserRepository implements UserRepository {
 
     // Package-private for testing
     User toDomain(UserDocument document) {
-        // Handle legacy data where timestamps might be null
         Instant now = Instant.now();
         Instant createdAt = document.getCreatedAt() != null ? document.getCreatedAt() : now;
         Instant updatedAt = document.getUpdatedAt() != null ? document.getUpdatedAt() : now;
@@ -102,6 +107,8 @@ public class MongoUserRepository implements UserRepository {
             String sortBy,
             String sortDirection) {
 
+        long start = System.currentTimeMillis();
+
         org.springframework.data.domain.Sort.Direction direction =
             "desc".equalsIgnoreCase(sortDirection)
                 ? org.springframework.data.domain.Sort.Direction.DESC
@@ -110,7 +117,8 @@ public class MongoUserRepository implements UserRepository {
         org.springframework.data.domain.Pageable pageable =
             org.springframework.data.domain.PageRequest.of(page, size, direction, sortBy);
 
-        org.springframework.data.mongodb.core.query.Query query = new org.springframework.data.mongodb.core.query.Query();
+        org.springframework.data.mongodb.core.query.Query query =
+            new org.springframework.data.mongodb.core.query.Query();
 
         if (search != null && !search.isBlank()) {
             org.springframework.data.mongodb.core.query.Criteria searchCriteria =
@@ -130,10 +138,18 @@ public class MongoUserRepository implements UserRepository {
         }
 
         long total = mongoTemplate.count(query, UserDocument.class);
-
         query.with(pageable);
         List<UserDocument> documents = mongoTemplate.find(query, UserDocument.class);
         List<User> users = documents.stream().map(this::toDomain).toList();
+
+        long elapsed = System.currentTimeMillis() - start;
+        if (elapsed > SLOW_QUERY_MS) {
+            log.warn("slow_query collection=users operation=findAllWithFilters elapsed={}ms page={} size={}",
+                    elapsed, page, size);
+        } else {
+            log.debug("query collection=users operation=findAllWithFilters elapsed={}ms results={}",
+                    elapsed, users.size());
+        }
 
         return new com.neurixa.core.domain.Page<>(users, page, size, total);
     }
