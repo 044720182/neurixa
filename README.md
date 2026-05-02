@@ -319,7 +319,20 @@ Untuk penyelaman mendalam, baca [ARCHITECTURE.md](done/ARCHITECTURE.md)—ini ad
 - `/api/**`: Butuh token JWT (dari login).
 - `/admin/**`: Butuh ROLE_ADMIN.
 
-Contoh: Login untuk mendapatkan token, lalu gunakan di header: `Authorization: Bearer <token>`
+**Perhatikan:** Gunakan token JWT untuk semua endpoint `/api/**`. Format error: `{"status":..., "error":...}`. Lihat [SECURITY.md](done/SECURITY.md) untuk hardening lebih lanjut.
+
+### Contoh Menggunakan API
+
+Setelah login:
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"user","password":"user123"}'
+
+# Tangkap token, lalu gunakan:
+curl -X GET http://localhost:8080/api/users/1 \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
 
 ---
 
@@ -329,10 +342,20 @@ Contoh: Login untuk mendapatkan token, lalu gunakan di header: `Authorization: B
 2. **Tambah Fitur:** Coba tambah endpoint "Ubah Kata Sandi". Ikuti langkah di [ARCHITECTURE.md](done/ARCHITECTURE.md).
 3. **Tulis Pengujian:** Lihat `neurixa-core/src/test` untuk contoh.
 4. **Kontribusi:** Perbaiki bug atau tingkatkan docs—kirim PR!
-5. **Sumber Daya:**
+5. **Dokumentasi Lengkap:** Lihat folder [`done/`](done/) untuk panduan mendetail:
+   - [QUICK-START.md](done/QUICK-START.md) - Setup & menjalankan pertama kali
+   - [ARCHITECTURE.md](done/ARCHITECTURE.md) - Penjelasan Arsitektur Hexagonal
+   - [FILE-MANAGEMENT.md](done/FILE-MANAGEMENT.md) - Manajemen file & S3
+   - [SECURITY.md](done/SECURITY.md) - Hardening keamanan JWT
+   - [API-DOCUMENTATION.md](done/API-DOCUMENTATION.md) - Daftar endpoint API
+   - [CHANGELOG.md](done/CHANGELOG.md) - Riwayat perubahan fase
+   - [BLOG-MODULE.md](done/BLOG-MODULE.md) - Penjelasan modul blog
+
+6. **Sumber Daya:**
    - [Dokumentasi Spring Boot](https://spring.io/projects/spring-boot)
-   - [Penjelasan Arsitektur Hexagonal](https://alistair.cockburn.us/hexagonal-architecture/)
+   - [Arsitektur Hexagonal - Alistair Cockburn](https://alistair.cockburn.us/hexagonal-architecture/)
    - [Panduan JWT](https://jwt.io/introduction/)
+   - [Spring Security](https://docs.spring.io/spring-security/reference/)
 
 ---
 

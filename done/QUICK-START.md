@@ -89,6 +89,18 @@ Application starts on `http://localhost:8080`.
 ./gradlew :neurixa-core:dependencies     # Inspect core dependencies (should be empty)
 ```
 
+**Example Test Output:**
+
+```bash
+$ ./gradlew test > /dev/null 2>&1
+
+
+BUILD SUCCESSFUL in 19s
+  ✓ 20 tests finished
+  ✓ 20 tests passed
+  ✓ 0 test failures
+```
+
 ---
 
 ## 4. Verify & Test the API

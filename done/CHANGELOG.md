@@ -269,3 +269,36 @@ Types used: `refactor`, `feat`, `security`, `docs`
 | Security audit items | 60/60 passing |
 | Security score | 9/10 |
 | Core dependencies | 0 (verified) |
+
+
+---
+
+## 🚧 Next Steps & Upcoming Features
+
+### Phase 6 Planned
+
+**Goal:** Expand beyond basic auth + file management with blog module integration.
+
+**What's Coming:**
+- **Blog Module:** Create, read, update, delete articles with categories & tags
+- **Comments:** Nested comments on articles
+- **File Attachments:** Link blog posts to files in core file management
+- **Pagination:** List articles with pagination support
+- **Search:** Full-text search across articles and comments
+- **Role-Based Features:** Admin-only endpoints for user management
+- **Rate Limiting:** Protect login endpoints from brute-force attacks
+- **Refresh Tokens:** Implement refresh token rotation (currently using short-lived tokens)
+- **CORS Configuration:** Production-ready CORS setup
+- **Health Checks:** Enhanced actuator metrics export
+
+**Priorities:**
+- 🟢 **High:** Blog CRUD, search, pagination
+- 🟡 **Medium:** Comments, file attachments, rate limiting
+- 🔴 **Low:** Token blacklist, advanced audit logging
+
+**Estimated Timeline:**
+- Blog core + basic CRUD: 1-2 weeks
+- Comments + attachments: 3-5 days
+- Security enhancements (rate limiting, refresh tokens): 1 week
+
+**Help Wanted:** Contributions welcome! See [CONTRIBUTING guide](./contributing.md) if created, or open an issue with your proposed feature.
