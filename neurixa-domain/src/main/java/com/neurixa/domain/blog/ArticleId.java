@@ -4,32 +4,23 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class ArticleId implements Serializable {
-    private final UUID value;
+/**
+ * Value object for article identity.
+ * Java 21 record — equals, hashCode, and accessor generated automatically.
+ */
+public record ArticleId(UUID value) implements Serializable {
 
-    public ArticleId(UUID value) {
-        this.value = Objects.requireNonNull(value, "ArticleId cannot be null.");
+    public ArticleId {
+        Objects.requireNonNull(value, "ArticleId cannot be null.");
     }
 
     public static ArticleId generate() {
         return new ArticleId(UUID.randomUUID());
     }
 
+    /** Convenience accessor matching the old getValue() call sites. */
     public UUID getValue() {
         return value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ArticleId articleId = (ArticleId) o;
-        return value.equals(articleId.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
     }
 
     @Override
