@@ -1,6 +1,7 @@
 package com.neurixa.core.files.usecase;
 
 import com.neurixa.core.domain.UserId;
+import com.neurixa.core.exception.ResourceNotFoundException;
 import com.neurixa.core.files.domain.Folder;
 import com.neurixa.core.files.domain.FolderContent;
 import com.neurixa.core.files.domain.FolderId;
@@ -24,9 +25,9 @@ public class ListFolderContentUseCase {
         Objects.requireNonNull(ownerId);
         if (folderId != null) {
             Folder folder = folderRepository.findByIdAndOwner(folderId, ownerId)
-                    .orElseThrow(() -> new IllegalArgumentException("Folder not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
             if (folder.isDeleted()) {
-                throw new IllegalArgumentException("Folder not found");
+                throw new ResourceNotFoundException("Folder not found");
             }
         }
         List<Folder> folders = folderId == null ? folderRepository.findRoots(ownerId) : folderRepository.findChildren(ownerId, folderId);

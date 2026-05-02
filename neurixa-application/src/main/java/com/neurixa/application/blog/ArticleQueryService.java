@@ -3,6 +3,7 @@ package com.neurixa.application.blog;
 import com.neurixa.domain.blog.Article;
 import com.neurixa.domain.blog.ArticleRepository;
 import com.neurixa.domain.blog.Slug;
+import com.neurixa.domain.blog.exception.ArticleNotFoundException;
 import java.util.List;
 import java.util.Objects;
 
@@ -16,7 +17,7 @@ public class ArticleQueryService {
 
     public Article getBySlug(String slug) {
         return articleRepository.findBySlug(new Slug(slug))
-                .orElseThrow(() -> new IllegalArgumentException("Article not found."));
+                .orElseThrow(() -> new ArticleNotFoundException("Article not found: " + slug));
     }
 
     public List<Article> listPublished(int page, int size) {

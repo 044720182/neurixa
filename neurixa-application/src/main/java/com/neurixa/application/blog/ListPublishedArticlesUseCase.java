@@ -16,8 +16,6 @@ public class ListPublishedArticlesUseCase {
     }
 
     public List<Article> execute() {
-        // This is a simplified implementation. In a real application, you would
-        // likely have a more efficient way to query for published articles.
-        throw new UnsupportedOperationException("Not implemented yet.");
+        return articleRepository.findPublished(0, Integer.MAX_VALUE);
     }
 }

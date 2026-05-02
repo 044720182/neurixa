@@ -74,7 +74,7 @@ class BlogArticleControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    void createArticle_domainThrows_returns500() throws Exception {
+    void createArticle_domainThrows_returns400() throws Exception {
         when(articleCommandService.createDraft(anyString(), anyString(), anyString()))
                 .thenThrow(new IllegalArgumentException("Title cannot be empty."));
 
@@ -84,7 +84,7 @@ class BlogArticleControllerTest {
                                 "title", "",
                                 "content", "Content",
                                 "excerpt", "Excerpt"))))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isBadRequest());
     }
 
     // ── GET /api/blog/articles ────────────────────────────────────────────────
@@ -129,12 +129,12 @@ class BlogArticleControllerTest {
 
     @Test
     @WithMockUser
-    void getArticleBySlug_notFound_returns500() throws Exception {
+    void getArticleBySlug_notFound_returns404() throws Exception {
         when(articleQueryService.getBySlug("not-found"))
-                .thenThrow(new IllegalArgumentException("Article not found."));
+                .thenThrow(new com.neurixa.domain.blog.exception.ArticleNotFoundException("Article not found: not-found"));
 
         mockMvc.perform(get("/api/blog/articles/{slug}", "not-found"))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
     }
 
     // ── PUT /api/blog/articles/{id} ───────────────────────────────────────────
@@ -186,13 +186,13 @@ class BlogArticleControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    void deleteArticle_publishedArticle_returns500() throws Exception {
+    void deleteArticle_publishedArticle_returns422() throws Exception {
         UUID id = UUID.randomUUID();
         doThrow(new IllegalStateException("Cannot delete a published article directly (must archive first)."))
                 .when(articleCommandService).delete(id);
 
         mockMvc.perform(delete("/api/blog/articles/{id}", id))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isUnprocessableEntity());
     }
 
     // ── POST /api/blog/articles/{id}/publish ──────────────────────────────────
@@ -212,13 +212,13 @@ class BlogArticleControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    void publishArticle_notFound_returns500() throws Exception {
+    void publishArticle_notFound_returns400() throws Exception {
         UUID id = UUID.randomUUID();
         when(articleCommandService.publish(id))
                 .thenThrow(new IllegalArgumentException("Article not found."));
 
         mockMvc.perform(post("/api/blog/articles/{id}/publish", id))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isBadRequest());
     }
 
     @Test

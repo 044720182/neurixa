@@ -3,6 +3,7 @@ package com.neurixa.application.blog;
 import com.neurixa.domain.blog.Article;
 import com.neurixa.domain.blog.ArticleRepository;
 import com.neurixa.domain.blog.Slug;
+import com.neurixa.domain.blog.exception.ArticleNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -44,7 +45,7 @@ class ArticleQueryServiceTest {
         when(articleRepository.findBySlug(slug)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getBySlug("not-found"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ArticleNotFoundException.class)
                 .hasMessageContaining("Article not found");
     }
 
