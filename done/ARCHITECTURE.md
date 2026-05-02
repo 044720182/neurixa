@@ -125,7 +125,7 @@ Outer layers depend on inner ones. The core never depends on anything outside it
 
 ```
 Client
-  │  POST /api/auth/register {"username":"john","email":"...","password":"..."}
+  │  POST /api/v1/auth/register {"username":"john","email":"...","password":"..."}
   ▼
 AuthController (neurixa-boot)
   │  Receives RegisterRequest DTO, triggers @Valid
@@ -155,7 +155,7 @@ sequenceDiagram
     participant Repo as UserRepository port
     participant DB as MongoDB
 
-    Client->>Controller: POST /api/auth/register
+    Client->>Controller: POST /api/v1/auth/register
     Controller->>UseCase: execute(username, email, password)
     UseCase->>Encoder: encode(rawPassword)
     Encoder-->>UseCase: hashedPassword

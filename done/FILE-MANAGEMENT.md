@@ -44,7 +44,7 @@ public interface StorageProvider {
 ### Upload Flow
 
 ```
-Client sends multipart file to POST /api/files/upload
+Client sends multipart file to POST /api/v1/files/upload
   ↓
 FileController extracts authenticated user + optional folderId
   ↓
@@ -140,13 +140,13 @@ All endpoints require JWT: `Authorization: Bearer <token>`.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/files/upload` | Upload a file |
-| `PUT` | `/api/files/{id}/rename` | Rename a file |
-| `PUT` | `/api/files/{id}/move` | Move a file |
-| `DELETE` | `/api/files/{id}` | Soft delete a file |
-| `POST` | `/api/folders` | Create a folder |
-| `GET` | `/api/folders/contents` | List folder contents |
-| `GET` | `/api/folders/contents/paged` | List folder contents (paginated) |
+| `POST` | `/api/v1/files/upload` | Upload a file |
+| `PUT` | `/api/v1/files/{id}/rename` | Rename a file |
+| `PUT` | `/api/v1/files/{id}/move` | Move a file |
+| `DELETE` | `/api/v1/files/{id}` | Soft delete a file |
+| `POST` | `/api/v1/folders` | Create a folder |
+| `GET` | `/api/v1/folders/contents` | List folder contents |
+| `GET` | `/api/v1/folders/contents/paged` | List folder contents (paginated) |
 
 See `API-DOCUMENTATION.md` for full request/response examples and cURL commands.
 
@@ -275,7 +275,7 @@ java -jar neurixa-boot.jar --spring.profiles.active=s3
 - Every file and folder operation is scoped to the authenticated user's `ownerId`
 - Controllers resolve the current user from the JWT principal and pass a `UserId` to use cases
 - Cross-user access (e.g., accessing another user's file by guessing an ID) is rejected at the use case level — ownership is validated before any operation
-- File APIs inherit the `/api/**` JWT protection from the main security configuration — no extra auth setup needed
+- File APIs inherit the `/api/v1/**` JWT protection from the main security configuration — no extra auth setup needed
 
 ---
 

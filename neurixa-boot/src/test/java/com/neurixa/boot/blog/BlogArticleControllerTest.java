@@ -50,7 +50,7 @@ class BlogArticleControllerTest {
         when(articleCommandService.createDraft("My Title", "Content here", "Short excerpt"))
                 .thenReturn(article);
 
-        mockMvc.perform(post("/api/blog/articles")
+        mockMvc.perform(post("/api/v1/blog/articles")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "title", "My Title",
@@ -63,7 +63,7 @@ class BlogArticleControllerTest {
 
     @Test
     void createArticle_unauthenticated_returns401() throws Exception {
-        mockMvc.perform(post("/api/blog/articles")
+        mockMvc.perform(post("/api/v1/blog/articles")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "title", "My Title",
@@ -78,7 +78,7 @@ class BlogArticleControllerTest {
         when(articleCommandService.createDraft(anyString(), anyString(), anyString()))
                 .thenThrow(new IllegalArgumentException("Title cannot be empty."));
 
-        mockMvc.perform(post("/api/blog/articles")
+        mockMvc.perform(post("/api/v1/blog/articles")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "title", "",
@@ -97,7 +97,7 @@ class BlogArticleControllerTest {
         when(articleQueryService.listPublished(0, 10)).thenReturn(List.of(a1, a2));
         when(articleQueryService.countPublished()).thenReturn(2L);
 
-        mockMvc.perform(get("/api/blog/articles")
+        mockMvc.perform(get("/api/v1/blog/articles")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
@@ -108,7 +108,7 @@ class BlogArticleControllerTest {
 
     @Test
     void listArticles_unauthenticated_returns401() throws Exception {
-        mockMvc.perform(get("/api/blog/articles"))
+        mockMvc.perform(get("/api/v1/blog/articles"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -121,7 +121,7 @@ class BlogArticleControllerTest {
         String slug = article.getSlug().getValue();
         when(articleQueryService.getBySlug(slug)).thenReturn(article);
 
-        mockMvc.perform(get("/api/blog/articles/{slug}", slug))
+        mockMvc.perform(get("/api/v1/blog/articles/{slug}", slug))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Hello World"))
                 .andExpect(jsonPath("$.slug").value(slug));
@@ -133,7 +133,7 @@ class BlogArticleControllerTest {
         when(articleQueryService.getBySlug("not-found"))
                 .thenThrow(new com.neurixa.domain.blog.exception.ArticleNotFoundException("Article not found: not-found"));
 
-        mockMvc.perform(get("/api/blog/articles/{slug}", "not-found"))
+        mockMvc.perform(get("/api/v1/blog/articles/{slug}", "not-found"))
                 .andExpect(status().isNotFound());
     }
 
@@ -147,7 +147,7 @@ class BlogArticleControllerTest {
         when(articleCommandService.update(eq(id), anyString(), anyString(), anyString()))
                 .thenReturn(updated);
 
-        mockMvc.perform(put("/api/blog/articles/{id}", id)
+        mockMvc.perform(put("/api/v1/blog/articles/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "title", "Updated Title",
@@ -159,7 +159,7 @@ class BlogArticleControllerTest {
 
     @Test
     void updateArticle_unauthenticated_returns401() throws Exception {
-        mockMvc.perform(put("/api/blog/articles/{id}", UUID.randomUUID())
+        mockMvc.perform(put("/api/v1/blog/articles/{id}", UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "title", "T", "content", "C", "excerpt", "E"))))
@@ -174,13 +174,13 @@ class BlogArticleControllerTest {
         UUID id = UUID.randomUUID();
         doNothing().when(articleCommandService).delete(id);
 
-        mockMvc.perform(delete("/api/blog/articles/{id}", id))
+        mockMvc.perform(delete("/api/v1/blog/articles/{id}", id))
                 .andExpect(status().isOk());
     }
 
     @Test
     void deleteArticle_unauthenticated_returns401() throws Exception {
-        mockMvc.perform(delete("/api/blog/articles/{id}", UUID.randomUUID()))
+        mockMvc.perform(delete("/api/v1/blog/articles/{id}", UUID.randomUUID()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -191,7 +191,7 @@ class BlogArticleControllerTest {
         doThrow(new IllegalStateException("Cannot delete a published article directly (must archive first)."))
                 .when(articleCommandService).delete(id);
 
-        mockMvc.perform(delete("/api/blog/articles/{id}", id))
+        mockMvc.perform(delete("/api/v1/blog/articles/{id}", id))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -205,7 +205,7 @@ class BlogArticleControllerTest {
         UUID id = article.getArticleId().getValue();
         when(articleCommandService.publish(id)).thenReturn(article);
 
-        mockMvc.perform(post("/api/blog/articles/{id}/publish", id))
+        mockMvc.perform(post("/api/v1/blog/articles/{id}/publish", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
     }
@@ -217,13 +217,13 @@ class BlogArticleControllerTest {
         when(articleCommandService.publish(id))
                 .thenThrow(new IllegalArgumentException("Article not found."));
 
-        mockMvc.perform(post("/api/blog/articles/{id}/publish", id))
+        mockMvc.perform(post("/api/v1/blog/articles/{id}/publish", id))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void publishArticle_unauthenticated_returns401() throws Exception {
-        mockMvc.perform(post("/api/blog/articles/{id}/publish", UUID.randomUUID()))
+        mockMvc.perform(post("/api/v1/blog/articles/{id}/publish", UUID.randomUUID()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -236,7 +236,7 @@ class BlogArticleControllerTest {
         UUID id = article.getArticleId().getValue();
         when(articleCommandService.restore(id)).thenReturn(article);
 
-        mockMvc.perform(post("/api/blog/articles/{id}/restore", id))
+        mockMvc.perform(post("/api/v1/blog/articles/{id}/restore", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("DRAFT"));
     }
@@ -249,7 +249,7 @@ class BlogArticleControllerTest {
         UUID id = article.getArticleId().getValue();
         when(articleCommandService.restore(id)).thenReturn(article);
 
-        mockMvc.perform(post("/api/blog/articles/{id}/restore", id))
+        mockMvc.perform(post("/api/v1/blog/articles/{id}/restore", id))
                 .andExpect(status().isOk());
     }
 }

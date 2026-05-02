@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/blog/categories")
+@RequestMapping("/api/v1/blog/categories")
 public class BlogCategoryController {
 
     private final CategoryCommandService categoryCommandService;

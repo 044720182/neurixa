@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/blog/articles")
+@RequestMapping("/api/v1/blog/articles")
 public class BlogArticleController {
 
     private final ArticleCommandService articleCommandService;

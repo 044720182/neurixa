@@ -101,7 +101,7 @@ class FileControllerTest {
                 .thenReturn(testFile);
 
         // When & Then
-        mockMvc.perform(multipart("/api/files/upload")
+        mockMvc.perform(multipart("/api/v1/files/upload")
                         .file(file)
                         .with(csrf()))
                 .andExpect(status().isCreated())
@@ -121,7 +121,7 @@ class FileControllerTest {
                 .thenReturn(fileInFolder);
 
         // When & Then
-        mockMvc.perform(multipart("/api/files/upload")
+        mockMvc.perform(multipart("/api/v1/files/upload")
                         .file(file)
                         .param("folderId", "folder-123")
                         .with(csrf()))
@@ -139,7 +139,7 @@ class FileControllerTest {
                 .thenThrow(new FileValidationException("File size exceeds the maximum allowed limit"));
 
         // When & Then
-        mockMvc.perform(multipart("/api/files/upload")
+        mockMvc.perform(multipart("/api/v1/files/upload")
                         .file(file)
                         .with(csrf()))
                 .andExpect(status().isBadRequest());
@@ -151,7 +151,7 @@ class FileControllerTest {
         MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "test content".getBytes());
 
         // When & Then
-        mockMvc.perform(multipart("/api/files/upload")
+        mockMvc.perform(multipart("/api/v1/files/upload")
                         .file(file)
                         .with(csrf()))
                 .andExpect(status().isUnauthorized());

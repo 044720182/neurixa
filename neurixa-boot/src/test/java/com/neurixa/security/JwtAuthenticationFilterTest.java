@@ -78,7 +78,7 @@ class JwtAuthenticationFilterTest {
     @Test
     void noToken_onProtectedEndpoint_returns401() throws Exception {
         // /api/auth/logout is protected — no token → 401
-        mockMvc.perform(post("/api/auth/logout"))
+        mockMvc.perform(post("/api/v1/auth/logout"))
                 .andExpect(status().isBadRequest()); // controller returns 400 for missing header
     }
 
@@ -88,7 +88,7 @@ class JwtAuthenticationFilterTest {
         when(loginUserUseCase.execute(anyString(), anyString()))
                 .thenThrow(new com.neurixa.core.exception.InvalidCredentialsException("Invalid username or password"));
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "username", "nobody",
@@ -101,7 +101,7 @@ class JwtAuthenticationFilterTest {
     @Test
     void expiredToken_onProtectedEndpoint_returns401() throws Exception {
         // filter skips setting auth → SecurityContext empty → 401
-        mockMvc.perform(post("/api/auth/logout")
+        mockMvc.perform(post("/api/v1/auth/logout")
                         .header("Authorization", "Bearer " + EXPIRED_TOKEN))
                 .andExpect(status().isBadRequest()); // controller handles missing auth header logic
     }
@@ -109,7 +109,7 @@ class JwtAuthenticationFilterTest {
     @Test
     void expiredToken_filterDoesNotSetAuthentication() throws Exception {
         // Verify filter calls validateToken and does NOT call getUsername for expired token
-        mockMvc.perform(post("/api/auth/logout")
+        mockMvc.perform(post("/api/v1/auth/logout")
                         .header("Authorization", "Bearer " + EXPIRED_TOKEN));
 
         verify(jwtTokenProvider, atLeastOnce()).validateToken(EXPIRED_TOKEN);
@@ -120,7 +120,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     void invalidToken_filterDoesNotSetAuthentication() throws Exception {
-        mockMvc.perform(post("/api/auth/logout")
+        mockMvc.perform(post("/api/v1/auth/logout")
                         .header("Authorization", "Bearer " + INVALID_TOKEN));
 
         verify(jwtTokenProvider, atLeastOnce()).validateToken(INVALID_TOKEN);
@@ -132,7 +132,7 @@ class JwtAuthenticationFilterTest {
     @Test
     void blacklistedToken_filterDoesNotSetAuthentication() throws Exception {
         // blacklisted → filter skips auth setup → getUsername never called
-        mockMvc.perform(post("/api/auth/logout")
+        mockMvc.perform(post("/api/v1/auth/logout")
                         .header("Authorization", "Bearer " + BLACKLISTED_TOKEN));
 
         verify(tokenBlacklistService).isBlacklisted(BLACKLISTED_TOKEN);
@@ -147,7 +147,7 @@ class JwtAuthenticationFilterTest {
         when(jwtTokenProvider.getExpiration(VALID_TOKEN))
                 .thenReturn(new java.util.Date(System.currentTimeMillis() + 3600_000));
 
-        mockMvc.perform(post("/api/auth/logout")
+        mockMvc.perform(post("/api/v1/auth/logout")
                         .header("Authorization", "Bearer " + VALID_TOKEN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Logged out successfully"));
@@ -161,7 +161,7 @@ class JwtAuthenticationFilterTest {
     @Test
     void tokenWithoutBearerPrefix_treatedAsMissing() throws Exception {
         // Filter only extracts token when header starts with "Bearer "
-        mockMvc.perform(post("/api/auth/logout")
+        mockMvc.perform(post("/api/v1/auth/logout")
                         .header("Authorization", VALID_TOKEN)) // no "Bearer " prefix
                 .andExpect(status().isBadRequest()); // controller sees no auth header
 

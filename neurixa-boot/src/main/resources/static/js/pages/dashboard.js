@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadCurrentUser() {
   try {
-    const { data } = await get('/api/admin/users/me');
+    const { data } = await get('/api/v1/admin/users/me');
     currentUser = data;
     document.getElementById('userName').textContent = data.username;
     document.getElementById('userRole').textContent = data.role;
@@ -70,11 +70,11 @@ async function loadCurrentUser() {
 
 async function loadDashboardStats() {
   try {
-    const { data } = await get('/api/admin/users?page=0&size=1&sortBy=createdAt&sortDirection=desc');
+    const { data } = await get('/api/v1/admin/users?page=0&size=1&sortBy=createdAt&sortDirection=desc');
     const total      = data.totalElements ?? 0;
-    const { data: activeData }  = await get('/api/admin/users?page=0&size=1&locked=false');
-    const { data: adminData }   = await get('/api/admin/users?page=0&size=1&role=ADMIN');
-    const { data: lockedData }  = await get('/api/admin/users?page=0&size=1&locked=true');
+    const { data: activeData }  = await get('/api/v1/admin/users?page=0&size=1&locked=false');
+    const { data: adminData }   = await get('/api/v1/admin/users?page=0&size=1&role=ADMIN');
+    const { data: lockedData }  = await get('/api/v1/admin/users?page=0&size=1&locked=true');
 
     document.getElementById('totalUsers').textContent  = total;
     document.getElementById('activeUsers').textContent = activeData.totalElements ?? 0;
@@ -102,7 +102,7 @@ async function loadUsersList(page) {
   if (locked) params.set('locked', locked);
 
   try {
-    const { data } = await get(`/api/admin/users?${params}`);
+    const { data } = await get(`/api/v1/admin/users?${params}`);
     cachedUsers            = data.content ?? [];
     usersState.hasNext     = data.hasNext     ?? false;
     usersState.hasPrevious = data.hasPrevious ?? false;
@@ -198,7 +198,7 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
   const email = document.getElementById('editUserEmail').value.trim();
   const role  = document.getElementById('editUserRole').value;
   try {
-    await put(`/api/admin/users/${id}`, { email, role });
+    await put(`/api/v1/admin/users/${id}`, { email, role });
     showToast('User updated successfully.', 'success');
     showSection('users-list');
     loadUsersList(usersState.page);
@@ -215,7 +215,7 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
 window.toggleLock = async (id, isCurrentlyLocked) => {
   const action = isCurrentlyLocked ? 'unlock' : 'lock';
   try {
-    await post(`/api/admin/users/${id}/${action}`);
+    await post(`/api/v1/admin/users/${id}/${action}`);
     showToast(`User ${action}ed.`, 'success');
     loadUsersList(usersState.page);
     loadDashboardStats();
@@ -242,7 +242,7 @@ document.getElementById('roleForm').addEventListener('submit', async (e) => {
   const id   = document.getElementById('roleUserId').value;
   const role = document.getElementById('roleSelect').value;
   try {
-    await put(`/api/admin/users/${id}/role`, { role });
+    await put(`/api/v1/admin/users/${id}/role`, { role });
     showToast('Role updated successfully.', 'success');
     showSection('users-list');
     loadUsersList(usersState.page);
@@ -275,7 +275,7 @@ window.deleteUser = (id) => {
 
 window.confirmDelete = async (id) => {
   try {
-    await del(`/api/admin/users/${id}`);
+    await del(`/api/v1/admin/users/${id}`);
     showToast('User deleted.', 'success');
     showSection('users-list');
     loadUsersList(usersState.page);
@@ -294,7 +294,7 @@ async function loadArticles(page) {
   articlesState.size = parseInt(document.getElementById('articlesPageSize').value, 10) || 10;
 
   try {
-    const { data } = await get(`/api/blog/articles?page=${page}&size=${articlesState.size}`);
+    const { data } = await get(`/api/v1/blog/articles?page=${page}&size=${articlesState.size}`);
     cachedArticles            = data.content ?? [];
     articlesState.hasNext     = data.hasNext     ?? false;
     articlesState.hasPrevious = data.hasPrevious ?? false;
@@ -338,14 +338,14 @@ window.articlesNext = () => { if (articlesState.hasNext)     loadArticles(articl
 
 window.publishArticle = async (id) => {
   try {
-    await post(`/api/blog/articles/${id}/publish`);
+    await post(`/api/v1/blog/articles/${id}/publish`);
     loadArticles(articlesState.page);
   } catch (err) { showToast(err.message || 'Publish failed.', 'danger'); }
 };
 
 window.restoreArticle = async (id) => {
   try {
-    await post(`/api/blog/articles/${id}/restore`);
+    await post(`/api/v1/blog/articles/${id}/restore`);
     loadArticles(articlesState.page);
   } catch (err) { showToast(err.message || 'Restore failed.', 'danger'); }
 };
@@ -353,7 +353,7 @@ window.restoreArticle = async (id) => {
 window.deleteArticle = async (id) => {
   if (!confirm('Delete this article?')) return;
   try {
-    await del(`/api/blog/articles/${id}`);
+    await del(`/api/v1/blog/articles/${id}`);
     loadArticles(articlesState.page);
   } catch (err) { showToast(err.message || 'Delete failed.', 'danger'); }
 };
@@ -361,7 +361,7 @@ window.deleteArticle = async (id) => {
 document.getElementById('articleForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   try {
-    await post('/api/blog/articles', {
+    await post('/api/v1/blog/articles', {
       title:   document.getElementById('articleTitle').value,
       content: document.getElementById('articleContent').value,
       excerpt: document.getElementById('articleExcerpt').value,
@@ -388,7 +388,7 @@ async function loadFolderContents() {
   if (parentId) params.set('parentId', parentId);
 
   try {
-    const { data } = await get(`/api/folders/contents/paged?${params}`);
+    const { data } = await get(`/api/v1/folders/contents/paged?${params}`);
 
     const folders = data.folders?.content ?? [];
     const files   = data.files?.content   ?? [];
@@ -456,7 +456,7 @@ window.createFolder = async () => {
   const parentId = document.getElementById('currentFolderId').value.trim() || null;
   if (!name) return;
   try {
-    await post('/api/folders', { name, parentId });
+    await post('/api/v1/folders', { name, parentId });
     document.getElementById('newFolderName').value = '';
     loadFolderContents();
   } catch (err) {
@@ -472,7 +472,7 @@ window.uploadFile = async () => {
   form.append('file', fileInput.files[0]);
   if (folderId) form.append('folderId', folderId);
   try {
-    await postForm('/api/files/upload', form);
+    await postForm('/api/v1/files/upload', form);
     fileInput.value = '';
     showToast('File uploaded.', 'success');
     loadFolderContents();
@@ -484,7 +484,7 @@ window.uploadFile = async () => {
 window.deleteFile = async (id) => {
   if (!confirm('Delete this file?')) return;
   try {
-    await del(`/api/files/${id}`);
+    await del(`/api/v1/files/${id}`);
     loadFolderContents();
   } catch (err) {
     showToast(err.message || 'Failed to delete file.', 'danger');
@@ -503,7 +503,7 @@ function formatBytes(bytes) {
 
 document.getElementById('logoutButton').addEventListener('click', async () => {
   try {
-    await post('/api/auth/logout');
+    await post('/api/v1/auth/logout');
   } catch {
     // swallow — token is cleared regardless
   }

@@ -67,7 +67,7 @@ class AuthControllerTest {
                 .thenReturn(testUser);
         when(jwtTokenProvider.createToken("john_doe", "USER")).thenReturn("mock-jwt-token");
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "username", "john_doe",
@@ -82,7 +82,7 @@ class AuthControllerTest {
 
     @Test
     void register_blankUsername_returns400WithValidationDetails() throws Exception {
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "username", "",
@@ -96,7 +96,7 @@ class AuthControllerTest {
 
     @Test
     void register_invalidEmail_returns400() throws Exception {
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "username", "john_doe",
@@ -108,7 +108,7 @@ class AuthControllerTest {
 
     @Test
     void register_shortPassword_returns400() throws Exception {
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "username", "john_doe",
@@ -124,7 +124,7 @@ class AuthControllerTest {
                 .thenThrow(new UserAlreadyExistsException(
                         UserAlreadyExistsException.Field.USERNAME, "Username already exists: john_doe"));
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "username", "john_doe",
@@ -142,7 +142,7 @@ class AuthControllerTest {
                 .thenThrow(new UserAlreadyExistsException(
                         UserAlreadyExistsException.Field.EMAIL, "Email already exists: john@example.com"));
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "username", "john_doe",
@@ -159,7 +159,7 @@ class AuthControllerTest {
         when(loginUserUseCase.execute("john_doe", "password123")).thenReturn(testUser);
         when(jwtTokenProvider.createToken("john_doe", "USER")).thenReturn("mock-jwt-token");
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "username", "john_doe",
@@ -174,7 +174,7 @@ class AuthControllerTest {
         when(loginUserUseCase.execute("john@example.com", "password123")).thenReturn(testUser);
         when(jwtTokenProvider.createToken("john_doe", "USER")).thenReturn("mock-jwt-token");
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "username", "john@example.com",
@@ -188,7 +188,7 @@ class AuthControllerTest {
         when(loginUserUseCase.execute(anyString(), anyString()))
                 .thenThrow(new InvalidCredentialsException("Invalid username or password"));
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "username", "john_doe",
@@ -200,7 +200,7 @@ class AuthControllerTest {
 
     @Test
     void login_blankPassword_returns400() throws Exception {
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "username", "john_doe",
@@ -216,7 +216,7 @@ class AuthControllerTest {
         when(jwtTokenProvider.validateToken("valid-token")).thenReturn(true);
         when(jwtTokenProvider.getExpiration("valid-token")).thenReturn(new Date(System.currentTimeMillis() + 3600000));
 
-        mockMvc.perform(post("/api/auth/logout")
+        mockMvc.perform(post("/api/v1/auth/logout")
                         .header("Authorization", "Bearer valid-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Logged out successfully"));
@@ -226,7 +226,7 @@ class AuthControllerTest {
 
     @Test
     void logout_missingAuthHeader_returns400() throws Exception {
-        mockMvc.perform(post("/api/auth/logout"))
+        mockMvc.perform(post("/api/v1/auth/logout"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Missing or invalid Authorization header"));
     }
@@ -235,7 +235,7 @@ class AuthControllerTest {
     void logout_invalidToken_returns400() throws Exception {
         when(jwtTokenProvider.validateToken("bad-token")).thenReturn(false);
 
-        mockMvc.perform(post("/api/auth/logout")
+        mockMvc.perform(post("/api/v1/auth/logout")
                         .header("Authorization", "Bearer bad-token"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Invalid or expired token"));
