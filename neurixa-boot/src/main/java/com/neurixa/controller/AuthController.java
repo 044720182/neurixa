@@ -41,9 +41,8 @@ public class AuthController {
 
     // LoginUserUseCase may call userRepository.save() twice:
     // once to record a failed attempt, or once to reset the counter on success.
-    // Wrapped in @Transactional to ensure consistency.
-    // Requires MongoDB replica set for true atomicity.
-    @Transactional
+    // NOTE: @Transactional requires MongoDB replica set.
+    // On standalone mongod this is silently ignored — see ARCHITECTURE.md §8.
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         User user = loginUserUseCase.execute(request.username(), request.password());

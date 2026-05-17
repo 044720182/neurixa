@@ -315,24 +315,97 @@ Untuk penyelaman mendalam, baca [ARCHITECTURE.md](done/ARCHITECTURE.md)—ini ad
 - **Contoh Curl:** [CURL-ROLE-MANAGEMENT.md](done/CURL-ROLE-MANAGEMENT.md)
 
 ### Catatan Keamanan
-- `/api/auth/**`: Publik (daftar, login).
-- `/api/**`: Butuh token JWT (dari login).
-- `/admin/**`: Butuh ROLE_ADMIN.
+- `/api/v1/auth/**`: Publik (daftar, login).
+- `/api/v1/**`: Butuh token JWT (dari login).
+- `/admin/**`: Butuh ROLE_ADMIN atau ROLE_SUPER_ADMIN.
 
-**Perhatikan:** Gunakan token JWT untuk semua endpoint `/api/**`. Format error: `{"status":..., "error":...}`. Lihat [SECURITY.md](done/SECURITY.md) untuk hardening lebih lanjut.
+**Perhatikan:** Gunakan token JWT untuk semua endpoint `/api/v1/**`. Format error: `{"status":..., "error":...}`. Lihat [SECURITY.md](done/SECURITY.md) untuk hardening lebih lanjut.
 
 ### Contoh Menggunakan API
 
 Setelah login:
 ```bash
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"user","password":"user123"}'
+  -d '{"username":"admin","password":"admin123"}'
 
 # Tangkap token, lalu gunakan:
-curl -X GET http://localhost:8080/api/users/1 \
+curl -X GET http://localhost:8080/api/v1/users/me \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
+
+---
+
+## 🖥️ Admin Dashboard (Frontend)
+
+Neurixa menyertakan **Admin Dashboard** berbasis web yang bisa diakses langsung lewat browser — tidak perlu build frontend terpisah. Dashboard di-serve oleh Spring Boot menggunakan Thymeleaf + ES Modules JavaScript.
+
+### Cara Akses
+
+1. Jalankan project (lihat Langkah 4 di atas)
+2. Buka browser → `http://localhost:8080/admin/login`
+3. Login dengan salah satu akun dev (lihat tabel di bawah)
+4. Redirect otomatis ke `http://localhost:8080/admin/dashboard`
+
+> **Catatan:** Hanya user dengan role `ADMIN` atau `SUPER_ADMIN` yang bisa masuk ke dashboard.
+
+### Fitur Dashboard
+
+| Fitur | Keterangan |
+|-------|------------|
+| **User Management** | Lihat daftar user, lock/unlock, ganti role, hapus |
+| **Blog Articles** | Buat artikel, publish, restore, hapus |
+| **File Manager** | Upload file, buat folder, hapus file |
+| **Logout** | Invalidate token (blacklist di Redis) |
+
+### File Frontend
+
+```
+neurixa-boot/src/main/resources/
+├── templates/
+│   ├── login.html       ← Halaman login admin
+│   └── dashboard.html   ← Dashboard utama
+└── static/
+    ├── js/pages/
+    │   ├── login.js     ← Logic form login
+    │   └── dashboard.js ← Logic dashboard (users, articles, files)
+    └── styles/
+        └── admin.css    ← Styling
+```
+
+---
+
+## 👤 Dev Sample Users (Auto-Seeded)
+
+Saat menjalankan dengan profile `dev`, aplikasi otomatis membuat **3 user sample** setiap startup melalui `DevDataSeeder` (`neurixa-boot/.../boot/DevDataSeeder.java`).
+
+| Role | Username | Password | Email |
+|------|----------|----------|-------|
+| `SUPER_ADMIN` | `superadmin` | `superadmin123` | superadmin@dev.local |
+| `ADMIN` | `admin` | `admin123` | admin@dev.local |
+| `USER` | `user` | `user123` | user@dev.local |
+
+> Login bisa menggunakan **username** atau **email** — keduanya diterima.
+
+### Konfigurasi Seeder
+
+Di `application-dev.yml`:
+```yaml
+neurixa:
+  seed:
+    enabled: true          # false = skip seeder saat startup
+    reset-on-start: true   # true = hapus semua user lalu seed ulang setiap startup
+```
+
+Dengan `reset-on-start: true` (default dev), database user selalu **fresh** setiap kali aplikasi dijalankan — cocok untuk development dan testing.
+
+### Reset Manual Database
+
+Untuk menghapus semua collections sekaligus:
+```bash
+./reset-dev-db.sh
+```
+Script ini akan meminta konfirmasi sebelum menghapus.
 
 ---
 
