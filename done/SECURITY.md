@@ -35,7 +35,7 @@
 ### Token Flow
 
 ```
-1. User logs in  →  POST /api/auth/login
+1. User logs in  →  POST /api/v1/auth/login
 2. Server validates credentials, generates JWT
 3. Client stores token (memory or sessionStorage — avoid localStorage in sensitive apps)
 4. Client sends token on every request:
@@ -85,15 +85,15 @@ Three separate Spring Security filter chains handle different URL patterns.
 ```
 Order 1: /admin/**    →  Requires ROLE_ADMIN
 Order 2: /actuator/** →  /health and /info public; rest requires ROLE_ADMIN
-Order 3: /api/**      →  /api/auth/** public; all other /api/** requires JWT
+Order 3: /api/v1/**      →  /api/v1/auth/** public; all other /api/v1/** requires JWT
 ```
 
 ### Route Authorization Summary
 
 | Pattern | Access |
 |---------|--------|
-| `/api/auth/**` | Public |
-| `/api/**` | Any authenticated user (valid JWT) |
+| `/api/v1/auth/**` | Public |
+| `/api/v1/**` | Any authenticated user (valid JWT) |
 | `/admin/**` | `ROLE_ADMIN` required |
 | `/actuator/health` | Public |
 | `/actuator/info` | Public |
@@ -206,7 +206,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 |----------|----------|--------|
 | Valid ADMIN token → `/admin/**` | 200 | ✅ |
 | Valid USER token → `/admin/**` | 403 | ✅ |
-| Valid USER token → `/api/**` | 200 | ✅ |
+| Valid USER token → `/api/v1/**` | 200 | ✅ |
 | Expired token | 401 | ✅ |
 | Invalid signature | 401 | ✅ |
 | Missing token | 401 | ✅ |
@@ -266,7 +266,7 @@ These are not yet implemented. Add them in the next security phase.
 Short-lived access tokens (15 min) + long-lived refresh tokens (7 days). Reduces exposure if a token is stolen.
 
 ```
-POST /api/auth/refresh
+POST /api/v1/auth/refresh
 Body: { "refreshToken": "<refresh-token>" }
 Response: { "token": "<new-access-token>" }
 ```
@@ -285,7 +285,7 @@ if (redisTemplate.hasKey("blacklist:" + claims.getId())) return false;
 
 ### Rate Limiting (High Priority)
 
-Prevent brute-force attacks on `/api/auth/login`.
+Prevent brute-force attacks on `/api/v1/auth/login`.
 
 ```yaml
 # application.yml with bucket4j or resilience4j

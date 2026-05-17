@@ -1,6 +1,9 @@
 spring:
   data:
     mongodb:
+      # For @Transactional support, MongoDB must run as a replica set.
+      # Standalone mongod silently ignores transactions.
+      # Dev replica set setup: see done/ARCHITECTURE.md § Transactional Boundaries
       uri: mongodb://localhost:27017/neurixa
     redis:
       host: 127.0.0.1
@@ -13,6 +16,11 @@ jwt:
 logging:
   level:
     com.neurixa: DEBUG
+    com.neurixa.filter.RequestLoggingFilter: INFO
+    com.neurixa.adapter.persistence: DEBUG
+    com.neurixa.adapter.files.persistence: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss} [%X{correlationId:--}] [%X{user:--}] %-5level %logger{36} - %msg%n"
 
 management:
   endpoints:

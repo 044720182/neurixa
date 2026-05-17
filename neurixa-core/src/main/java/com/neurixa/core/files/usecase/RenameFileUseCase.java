@@ -1,6 +1,7 @@
 package com.neurixa.core.files.usecase;
 
 import com.neurixa.core.domain.UserId;
+import com.neurixa.core.exception.ResourceNotFoundException;
 import com.neurixa.core.files.domain.FileId;
 import com.neurixa.core.files.domain.StoredFile;
 import com.neurixa.core.files.port.FileRepository;
@@ -20,7 +21,7 @@ public class RenameFileUseCase {
         Objects.requireNonNull(newName);
 
         StoredFile file = fileRepository.findByIdAndOwner(fileId, ownerId)
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("File not found"));
 
         StoredFile updated = file.rename(newName);
         return fileRepository.save(updated);

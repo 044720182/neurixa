@@ -7,6 +7,8 @@ import com.neurixa.core.files.domain.FolderId;
 import com.neurixa.core.files.domain.StoredFile;
 import com.neurixa.core.files.port.FileRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -18,6 +20,10 @@ import java.util.Optional;
 @Repository
 @RequiredArgsConstructor
 public class MongoFileRepository implements FileRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(MongoFileRepository.class);
+    private static final long SLOW_QUERY_MS = 200;
+
     private final FileMongoRepository mongoRepository;
     private final MongoTemplate mongoTemplate;
 
@@ -45,6 +51,8 @@ public class MongoFileRepository implements FileRepository {
 
     @Override
     public List<StoredFile> findByFolder(UserId ownerId, FolderId folderId, int page, int size) {
+        long start = System.currentTimeMillis();
+
         Query query = new Query();
         query.addCriteria(Criteria.where("ownerId").is(ownerId.getValue()));
         if (folderId == null) {
@@ -54,8 +62,18 @@ public class MongoFileRepository implements FileRepository {
         }
         query.skip((long) Math.max(page, 0) * Math.max(size, 1));
         query.limit(Math.max(size, 1));
-        query.with(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Order.desc("updatedAt")));
-        return mongoTemplate.find(query, FileDocument.class).stream().map(this::toDomain).toList();
+        query.with(org.springframework.data.domain.Sort.by(
+                org.springframework.data.domain.Sort.Order.desc("updatedAt")));
+
+        List<StoredFile> results = mongoTemplate.find(query, FileDocument.class)
+                .stream().map(this::toDomain).toList();
+
+        long elapsed = System.currentTimeMillis() - start;
+        if (elapsed > SLOW_QUERY_MS) {
+            log.warn("slow_query collection=files operation=findByFolder elapsed={}ms page={} size={}",
+                    elapsed, page, size);
+        }
+        return results;
     }
 
     @Override

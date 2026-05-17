@@ -4,32 +4,23 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class CategoryId implements Serializable {
-    private final UUID value;
+/**
+ * Value object for category identity.
+ * Java 21 record — equals, hashCode, and accessor generated automatically.
+ */
+public record CategoryId(UUID value) implements Serializable {
 
-    public CategoryId(UUID value) {
-        this.value = Objects.requireNonNull(value, "CategoryId cannot be null.");
+    public CategoryId {
+        Objects.requireNonNull(value, "CategoryId cannot be null.");
     }
 
     public static CategoryId generate() {
         return new CategoryId(UUID.randomUUID());
     }
 
+    /** Convenience accessor matching the old getValue() call sites. */
     public UUID getValue() {
         return value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CategoryId that = (CategoryId) o;
-        return value.equals(that.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
     }
 
     @Override

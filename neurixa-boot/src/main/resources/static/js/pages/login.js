@@ -44,7 +44,7 @@ form.addEventListener('submit', async (event) => {
 
   try {
     // Use raw fetch — api.js would redirect on 401, but here 401 = wrong credentials.
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch('/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -1,34 +1,22 @@
 package com.neurixa.core.files.domain;
 
 import java.io.Serializable;
-import java.util.Objects;
 
-public final class FolderId implements Serializable {
-    private static final long serialVersionUID = 1L;
-    private final String value;
+/**
+ * Value object for folder identity.
+ * Java 21 record — equals, hashCode, toString, and accessor generated automatically.
+ */
+public record FolderId(String value) implements Serializable {
 
-    public FolderId(String value) {
+    public FolderId {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Folder ID cannot be null or blank");
         }
-        this.value = value;
     }
 
+    /** Convenience accessor matching the old getValue() call sites. */
     public String getValue() {
         return value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FolderId folderId = (FolderId) o;
-        return value.equals(folderId.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
     }
 
     @Override
@@ -36,4 +24,3 @@ public final class FolderId implements Serializable {
         return value;
     }
 }
-

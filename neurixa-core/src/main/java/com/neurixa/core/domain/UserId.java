@@ -3,35 +3,23 @@ package com.neurixa.core.domain;
 import com.neurixa.core.exception.InvalidUserStateException;
 
 import java.io.Serializable;
-import java.util.Objects;
 
-public final class UserId implements Serializable {
-    private static final long serialVersionUID = 1L;
+/**
+ * Value object for user identity.
+ * Java 21 record — equals, hashCode, toString, and accessor generated automatically.
+ */
+public record UserId(String value) implements Serializable {
 
-    private final String value;
-
-    public UserId(String value) {
+    // Compact constructor — validation runs before field assignment
+    public UserId {
         if (value == null || value.isBlank()) {
             throw new InvalidUserStateException("User ID cannot be null or blank");
         }
-        this.value = value;
     }
 
+    /** Convenience accessor matching the old getValue() call sites. */
     public String getValue() {
         return value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        UserId userId = (UserId) o;
-        return value.equals(userId.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
     }
 
     @Override

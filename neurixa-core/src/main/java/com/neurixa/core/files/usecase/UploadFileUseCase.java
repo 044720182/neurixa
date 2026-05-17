@@ -11,6 +11,8 @@ import com.neurixa.core.files.port.FileRepository;
 import com.neurixa.core.files.port.FileVersionRepository;
 import com.neurixa.core.files.port.FolderRepository;
 import com.neurixa.core.files.port.StorageProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.util.Objects;
@@ -18,6 +20,9 @@ import java.util.Optional;
 import java.util.Set;
 
 public class UploadFileUseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(UploadFileUseCase.class);
+
     private final FileRepository fileRepository;
     private final FileVersionRepository fileVersionRepository;
     private final FolderRepository folderRepository;
@@ -50,15 +55,21 @@ public class UploadFileUseCase {
         Objects.requireNonNull(data);
 
         if (size > maxFileSize) {
+            log.warn("event=upload_rejected reason=size_exceeded filename={} size={} max={} owner={}",
+                    originalFilename, size, maxFileSize, ownerId.getValue());
             throw new FileValidationException("File size exceeds the maximum allowed limit");
         }
         if (!allowedMimeTypes.contains(mimeType)) {
+            log.warn("event=upload_rejected reason=mime_not_allowed filename={} mimeType={} owner={}",
+                    originalFilename, mimeType, ownerId.getValue());
             throw new FileValidationException("File MIME type is not allowed");
         }
 
         if (targetFolderId != null) {
             Optional<Folder> folderOpt = folderRepository.findByIdAndOwner(targetFolderId, ownerId);
             if (folderOpt.isEmpty() || folderOpt.get().isDeleted()) {
+                log.warn("event=upload_rejected reason=folder_not_found folderId={} owner={}",
+                        targetFolderId.getValue(), ownerId.getValue());
                 throw new FolderOwnershipException("Folder not found or you don't have access");
             }
         }
@@ -68,6 +79,11 @@ public class UploadFileUseCase {
         StoredFile saved = fileRepository.save(file);
         FileVersion version = FileVersion.createNew(saved.getId(), 1, storageKey, size, null);
         fileVersionRepository.save(version);
+
+        log.info("event=file_uploaded fileId={} filename={} mimeType={} size={} folderId={} owner={}",
+                saved.getId().getValue(), originalFilename, mimeType, size,
+                targetFolderId != null ? targetFolderId.getValue() : "root",
+                ownerId.getValue());
         return saved;
     }
 }

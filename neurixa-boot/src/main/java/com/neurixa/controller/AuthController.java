@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Date;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final RegisterUserUseCase registerUserUseCase;
@@ -38,6 +39,10 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new LoginResponse(token, "Bearer", toUserResponse(user)));
     }
 
+    // LoginUserUseCase may call userRepository.save() twice:
+    // once to record a failed attempt, or once to reset the counter on success.
+    // NOTE: @Transactional requires MongoDB replica set.
+    // On standalone mongod this is silently ignored — see ARCHITECTURE.md §8.
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         User user = loginUserUseCase.execute(request.username(), request.password());

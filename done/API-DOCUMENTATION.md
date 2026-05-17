@@ -20,7 +20,7 @@
 
 All auth endpoints are public — no token required.
 
-### POST `/api/auth/register`
+### POST `/api/v1/auth/register`
 
 Register a new user account.
 
@@ -55,14 +55,14 @@ Register a new user account.
 **Error codes:** `400` validation failed · `409` username or email already exists
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/register \
+curl -X POST http://localhost:8080/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{"username":"john_doe","email":"john@example.com","password":"securePassword123"}'
 ```
 
 ---
 
-### POST `/api/auth/login`
+### POST `/api/v1/auth/login`
 
 Authenticate and receive a JWT. Accepts either username or email.
 
@@ -81,19 +81,19 @@ or
 
 ```bash
 # Login with username
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"john_doe","password":"securePassword123"}'
 
 # Login with email
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"john@example.com","password":"securePassword123"}'
 ```
 
 ---
 
-### POST `/api/auth/logout`
+### POST `/api/v1/auth/logout`
 
 Stateless logout — the server returns a confirmation; the **client must discard the token**.
 
@@ -105,7 +105,7 @@ Stateless logout — the server returns a confirmation; the **client must discar
 ```
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/logout
+curl -X POST http://localhost:8080/api/v1/auth/logout
 ```
 
 ---
@@ -114,7 +114,7 @@ curl -X POST http://localhost:8080/api/auth/logout
 
 All endpoints require a valid JWT (`Authorization: Bearer <token>`).
 
-### GET `/api/users/me`
+### GET `/api/v1/users/me`
 
 Returns the profile of the currently authenticated user.
 
@@ -131,12 +131,12 @@ Returns the profile of the currently authenticated user.
 **Error codes:** `401` missing or invalid token
 
 ```bash
-curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/users/me
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/users/me
 ```
 
 ---
 
-### GET `/api/users`
+### GET `/api/v1/users`
 
 List users with optional filters and pagination. Requires authentication.
 
@@ -169,20 +169,20 @@ List users with optional filters and pagination. Requires authentication.
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
-     "http://localhost:8080/api/users?page=0&size=10&sortBy=createdAt&sortDirection=desc"
+     "http://localhost:8080/api/v1/users?page=0&size=10&sortBy=createdAt&sortDirection=desc"
 ```
 
 ---
 
 ## Admin — User Management
 
-All `/api/admin/**` endpoints require `ROLE_ADMIN`.
+All `/api/v1/admin/**` endpoints require `ROLE_ADMIN`.
 
-### GET `/api/admin/users`
+### GET `/api/v1/admin/users`
 
 Paginated user list with extended admin fields.
 
-Same query parameters as `GET /api/users`, but returns richer user objects:
+Same query parameters as `GET /api/v1/users`, but returns richer user objects:
 
 ```json
 {
@@ -210,12 +210,12 @@ Default page size is `20`.
 
 ```bash
 curl -H "Authorization: Bearer $ADMIN_TOKEN" \
-     "http://localhost:8080/api/admin/users?page=0&size=20"
+     "http://localhost:8080/api/v1/admin/users?page=0&size=20"
 ```
 
 ---
 
-### GET `/api/admin/users/me`
+### GET `/api/v1/admin/users/me`
 
 Admin's own profile (extended format).
 
@@ -231,7 +231,7 @@ Admin's own profile (extended format).
 
 ---
 
-### PUT `/api/admin/users/{id}`
+### PUT `/api/v1/admin/users/{id}`
 
 Update a user's email or role.
 
@@ -245,7 +245,7 @@ Update a user's email or role.
 **Error codes:** `400` stale session · `401` · `403` · `404` user not found
 
 ```bash
-curl -X PUT http://localhost:8080/api/admin/users/{userId} \
+curl -X PUT http://localhost:8080/api/v1/admin/users/{userId} \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"email":"new@example.com","role":"ADMIN"}'
@@ -255,7 +255,7 @@ curl -X PUT http://localhost:8080/api/admin/users/{userId} \
 
 ---
 
-### PUT `/api/admin/users/{id}/role`
+### PUT `/api/v1/admin/users/{id}/role`
 
 Change a user's role specifically.
 
@@ -267,13 +267,13 @@ Change a user's role specifically.
 
 ```bash
 # Promote to ADMIN
-curl -X PUT "http://localhost:8080/api/admin/users/{userId}/role" \
+curl -X PUT "http://localhost:8080/api/v1/admin/users/{userId}/role" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"role":"ADMIN"}'
 
 # Demote to USER
-curl -X PUT "http://localhost:8080/api/admin/users/{userId}/role" \
+curl -X PUT "http://localhost:8080/api/v1/admin/users/{userId}/role" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"role":"USER"}'
@@ -283,7 +283,7 @@ curl -X PUT "http://localhost:8080/api/admin/users/{userId}/role" \
 
 ---
 
-### DELETE `/api/admin/users/{id}`
+### DELETE `/api/v1/admin/users/{id}`
 
 Delete a user by ID.
 
@@ -292,7 +292,7 @@ Delete a user by ID.
 **Error codes:** `401` · `403` · `404` user not found
 
 ```bash
-curl -X DELETE http://localhost:8080/api/admin/users/{userId} \
+curl -X DELETE http://localhost:8080/api/v1/admin/users/{userId} \
   -H "Authorization: Bearer $ADMIN_TOKEN"
 ```
 
@@ -304,13 +304,13 @@ curl -X DELETE http://localhost:8080/api/admin/users/{userId} \
 
 | Method | Endpoint | Access | Description |
 |--------|----------|--------|-------------|
-| `POST` | `/api/blog/articles` | Admin | Create draft article |
-| `PUT` | `/api/blog/articles/{id}` | Admin | Update article |
-| `DELETE` | `/api/blog/articles/{id}` | Admin | Delete article → `204` |
-| `POST` | `/api/blog/articles/{id}/publish` | Admin | Publish article |
-| `POST` | `/api/blog/articles/{id}/restore` | Admin | Restore article |
-| `GET` | `/api/blog/articles/{slug}` | Public | Get article by slug |
-| `GET` | `/api/blog/articles` | Public | List published articles (paginated) |
+| `POST` | `/api/v1/blog/articles` | Admin | Create draft article |
+| `PUT` | `/api/v1/blog/articles/{id}` | Admin | Update article |
+| `DELETE` | `/api/v1/blog/articles/{id}` | Admin | Delete article → `204` |
+| `POST` | `/api/v1/blog/articles/{id}/publish` | Admin | Publish article |
+| `POST` | `/api/v1/blog/articles/{id}/restore` | Admin | Restore article |
+| `GET` | `/api/v1/blog/articles/{slug}` | Public | Get article by slug |
+| `GET` | `/api/v1/blog/articles` | Public | List published articles (paginated) |
 
 **Create Article — Request:**
 ```json
@@ -348,12 +348,12 @@ curl -X DELETE http://localhost:8080/api/admin/users/{userId} \
 ```
 
 ```bash
-curl -X POST http://localhost:8080/api/blog/articles \
+curl -X POST http://localhost:8080/api/v1/blog/articles \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"title":"My First Post","content":"Content here","excerpt":"Summary"}'
 
-curl "http://localhost:8080/api/blog/articles?page=0&size=10" \
+curl "http://localhost:8080/api/v1/blog/articles?page=0&size=10" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -361,9 +361,9 @@ curl "http://localhost:8080/api/blog/articles?page=0&size=10" \
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/blog/comments` | Submit a comment |
-| `POST` | `/api/blog/comments/{id}/approve` | Approve comment (admin) |
-| `POST` | `/api/blog/comments/{id}/reject` | Reject comment (admin) |
+| `POST` | `/api/v1/blog/comments` | Submit a comment |
+| `POST` | `/api/v1/blog/comments/{id}/approve` | Approve comment (admin) |
+| `POST` | `/api/v1/blog/comments/{id}/reject` | Reject comment (admin) |
 
 **Submit Comment — Request:**
 ```json
@@ -380,13 +380,13 @@ curl "http://localhost:8080/api/blog/articles?page=0&size=10" \
 
 ```bash
 # Create category
-curl -X POST http://localhost:8080/api/blog/categories \
+curl -X POST http://localhost:8080/api/v1/blog/categories \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"name":"Technology","parentId":null}'
 
 # Create tag
-curl -X POST http://localhost:8080/api/blog/tags \
+curl -X POST http://localhost:8080/api/v1/blog/tags \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"name":"java"}'
@@ -404,20 +404,20 @@ All endpoints require JWT. Set `base=http://localhost:8080` and `token=<your-jwt
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/folders` | Create folder |
-| `GET` | `/api/folders/contents` | List contents (non-paged) |
-| `GET` | `/api/folders/contents/paged` | List contents (paginated) |
+| `POST` | `/api/v1/folders` | Create folder |
+| `GET` | `/api/v1/folders/contents` | List contents (non-paged) |
+| `GET` | `/api/v1/folders/contents/paged` | List contents (paginated) |
 
 **Create Folder:**
 ```bash
 # Root folder
-curl -X POST "$base/api/folders" \
+curl -X POST "$base/api/v1/folders" \
   -H "Authorization: Bearer $token" \
   -H "Content-Type: application/json" \
   -d '{"name":"My Folder","parentId":null}'
 
 # Nested folder
-curl -X POST "$base/api/folders" \
+curl -X POST "$base/api/v1/folders" \
   -H "Authorization: Bearer $token" \
   -H "Content-Type: application/json" \
   -d '{"name":"Nested Folder","parentId":"PARENT_FOLDER_ID"}'
@@ -425,8 +425,8 @@ curl -X POST "$base/api/folders" \
 
 **List Contents (non-paged):**
 ```bash
-curl "$base/api/folders/contents" -H "Authorization: Bearer $token"
-curl "$base/api/folders/contents?parentId=FOLDER_ID" -H "Authorization: Bearer $token"
+curl "$base/api/v1/folders/contents" -H "Authorization: Bearer $token"
+curl "$base/api/v1/folders/contents?parentId=FOLDER_ID" -H "Authorization: Bearer $token"
 ```
 
 ```json
@@ -441,7 +441,7 @@ curl "$base/api/folders/contents?parentId=FOLDER_ID" -H "Authorization: Bearer $
 Query parameters: `parentId`, `pageFolders` (default 0), `sizeFolders` (default 20), `pageFiles` (default 0), `sizeFiles` (default 20)
 
 ```bash
-curl "$base/api/folders/contents/paged?pageFolders=0&sizeFolders=20&pageFiles=0&sizeFiles=20" \
+curl "$base/api/v1/folders/contents/paged?pageFolders=0&sizeFolders=20&pageFiles=0&sizeFiles=20" \
   -H "Authorization: Bearer $token"
 ```
 
@@ -449,42 +449,42 @@ curl "$base/api/folders/contents/paged?pageFolders=0&sizeFolders=20&pageFiles=0&
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/files/upload` | Upload file (multipart) |
-| `PUT` | `/api/files/{id}/rename` | Rename file |
-| `PUT` | `/api/files/{id}/move` | Move file |
-| `DELETE` | `/api/files/{id}` | Soft delete file |
+| `POST` | `/api/v1/files/upload` | Upload file (multipart) |
+| `PUT` | `/api/v1/files/{id}/rename` | Rename file |
+| `PUT` | `/api/v1/files/{id}/move` | Move file |
+| `DELETE` | `/api/v1/files/{id}` | Soft delete file |
 
 ```bash
 # Upload to root
-curl -X POST "$base/api/files/upload" \
+curl -X POST "$base/api/v1/files/upload" \
   -H "Authorization: Bearer $token" \
   -F "file=@/path/to/file.ext"
 
 # Upload to folder
-curl -X POST "$base/api/files/upload?folderId=FOLDER_ID" \
+curl -X POST "$base/api/v1/files/upload?folderId=FOLDER_ID" \
   -H "Authorization: Bearer $token" \
   -F "file=@/path/to/file.ext"
 
 # Rename
-curl -X PUT "$base/api/files/FILE_ID/rename" \
+curl -X PUT "$base/api/v1/files/FILE_ID/rename" \
   -H "Authorization: Bearer $token" \
   -H "Content-Type: application/json" \
   -d '{"name":"new-name.ext"}'
 
 # Move to folder
-curl -X PUT "$base/api/files/FILE_ID/move" \
+curl -X PUT "$base/api/v1/files/FILE_ID/move" \
   -H "Authorization: Bearer $token" \
   -H "Content-Type: application/json" \
   -d '{"targetFolderId":"TARGET_FOLDER_ID"}'
 
 # Move to root
-curl -X PUT "$base/api/files/FILE_ID/move" \
+curl -X PUT "$base/api/v1/files/FILE_ID/move" \
   -H "Authorization: Bearer $token" \
   -H "Content-Type: application/json" \
   -d '{"targetFolderId":null}'
 
 # Delete (soft)
-curl -X DELETE "$base/api/files/FILE_ID" \
+curl -X DELETE "$base/api/v1/files/FILE_ID" \
   -H "Authorization: Bearer $token"
 ```
 
@@ -526,7 +526,7 @@ Spring Boot Actuator is configured with a dedicated security chain.
 
 ```bash
 # Get admin token
-TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}' | jq -r '.token')
 
@@ -607,7 +607,7 @@ All errors return a consistent JSON structure:
   "status": 409,
   "error": "Conflict",
   "message": "Username already exists: john_doe",
-  "path": "/api/auth/register",
+  "path": "/api/v1/auth/register",
   "details": null
 }
 ```
@@ -620,7 +620,7 @@ For validation errors, `details` is an array:
   "status": 400,
   "error": "Validation Failed",
   "message": "Invalid input parameters",
-  "path": "/api/auth/register",
+  "path": "/api/v1/auth/register",
   "details": [
     "Username must be between 3 and 50 characters",
     "Email must be valid",

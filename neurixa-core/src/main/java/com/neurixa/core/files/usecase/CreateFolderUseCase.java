@@ -1,6 +1,7 @@
 package com.neurixa.core.files.usecase;
 
 import com.neurixa.core.domain.UserId;
+import com.neurixa.core.exception.ResourceNotFoundException;
 import com.neurixa.core.files.domain.Folder;
 import com.neurixa.core.files.domain.FolderId;
 import com.neurixa.core.files.port.FolderRepository;
@@ -26,7 +27,7 @@ public class CreateFolderUseCase {
 
         Optional<Folder> parent = folderRepository.findByIdAndOwner(parentId, ownerId);
         if (parent.isEmpty() || parent.get().isDeleted()) {
-            throw new IllegalArgumentException("Parent folder not found");
+            throw new ResourceNotFoundException("Parent folder not found");
         }
         Folder folder = Folder.createChild(ownerId, name, parent.get());
         return folderRepository.save(folder);

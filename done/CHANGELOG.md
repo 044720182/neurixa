@@ -4,6 +4,32 @@ A summary of every development phase: what was built, why decisions were made, a
 
 ---
 
+## Phase 7 — API Versioning
+
+**Goal:** Prefix all REST endpoints with `/api/v1/` to enable future non-breaking API evolution.
+
+### What Changed
+
+All REST endpoints moved from `/api/` to `/api/v1/`:
+
+| Before | After |
+|--------|-------|
+| `/api/auth/**` | `/api/v1/auth/**` |
+| `/api/users/**` | `/api/v1/users/**` |
+| `/api/admin/users/**` | `/api/v1/admin/users/**` |
+| `/api/blog/**` | `/api/v1/blog/**` |
+| `/api/files/**` | `/api/v1/files/**` |
+| `/api/folders/**` | `/api/v1/folders/**` |
+
+**Files updated:**
+- All 8 controllers (`@RequestMapping`)
+- `SecurityConfig` — path matchers for admin and auth chains
+- `login.js` and `dashboard.js` — all `fetch`/`get`/`post`/`put`/`del` calls
+- All integration tests in `neurixa-boot`
+- All documentation in `done/`
+
+---
+
 ## Phase 5 — Login with Email + Dev Seeder
 
 **Commit:** `9d84027`
@@ -159,7 +185,7 @@ public final class User {
 - `BcryptPasswordEncoderAdapter` — implements `PasswordEncoder` using Spring's BCrypt
 
 **Boot additions:**
-- `AuthController` — `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`
+- `AuthController` — `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`
 - Request DTOs: `RegisterRequest`, `LoginRequest` (Jakarta Bean Validation)
 - Response DTOs: `AuthResponse`, `UserResponse`, `MessageResponse`, `ErrorResponse`
 - `GlobalExceptionHandler` — maps domain exceptions to HTTP status codes
@@ -179,9 +205,9 @@ Controllers call use cases. Use cases call ports. Adapters implement ports. No b
 
 | Endpoint | Success | Errors |
 |----------|---------|--------|
-| `POST /api/auth/register` | 201 | 400 (validation), 409 (duplicate) |
-| `POST /api/auth/login` | 200 | 400 (validation), 401 (invalid creds) |
-| `POST /api/auth/logout` | 200 | — |
+| `POST /api/v1/auth/register` | 201 | 400 (validation), 409 (duplicate) |
+| `POST /api/v1/auth/login` | 200 | 400 (validation), 401 (invalid creds) |
+| `POST /api/v1/auth/logout` | 200 | — |
 
 ---
 
@@ -269,3 +295,36 @@ Types used: `refactor`, `feat`, `security`, `docs`
 | Security audit items | 60/60 passing |
 | Security score | 9/10 |
 | Core dependencies | 0 (verified) |
+
+
+---
+
+## 🚧 Next Steps & Upcoming Features
+
+### Phase 6 Planned
+
+**Goal:** Expand beyond basic auth + file management with blog module integration.
+
+**What's Coming:**
+- **Blog Module:** Create, read, update, delete articles with categories & tags
+- **Comments:** Nested comments on articles
+- **File Attachments:** Link blog posts to files in core file management
+- **Pagination:** List articles with pagination support
+- **Search:** Full-text search across articles and comments
+- **Role-Based Features:** Admin-only endpoints for user management
+- **Rate Limiting:** Protect login endpoints from brute-force attacks
+- **Refresh Tokens:** Implement refresh token rotation (currently using short-lived tokens)
+- **CORS Configuration:** Production-ready CORS setup
+- **Health Checks:** Enhanced actuator metrics export
+
+**Priorities:**
+- 🟢 **High:** Blog CRUD, search, pagination
+- 🟡 **Medium:** Comments, file attachments, rate limiting
+- 🔴 **Low:** Token blacklist, advanced audit logging
+
+**Estimated Timeline:**
+- Blog core + basic CRUD: 1-2 weeks
+- Comments + attachments: 3-5 days
+- Security enhancements (rate limiting, refresh tokens): 1 week
+
+**Help Wanted:** Contributions welcome! See [CONTRIBUTING guide](./contributing.md) if created, or open an issue with your proposed feature.

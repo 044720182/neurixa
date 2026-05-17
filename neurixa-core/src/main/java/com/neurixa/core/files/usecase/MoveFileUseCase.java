@@ -1,6 +1,7 @@
 package com.neurixa.core.files.usecase;
 
 import com.neurixa.core.domain.UserId;
+import com.neurixa.core.exception.ResourceNotFoundException;
 import com.neurixa.core.files.domain.FileId;
 import com.neurixa.core.files.domain.Folder;
 import com.neurixa.core.files.domain.FolderId;
@@ -24,13 +25,13 @@ public class MoveFileUseCase {
         Objects.requireNonNull(fileId);
 
         StoredFile file = fileRepository.findByIdAndOwner(fileId, ownerId)
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("File not found"));
 
         if (targetFolderId != null) {
             Folder target = folderRepository.findByIdAndOwner(targetFolderId, ownerId)
-                    .orElseThrow(() -> new IllegalArgumentException("Target folder not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Target folder not found"));
             if (target.isDeleted()) {
-                throw new IllegalArgumentException("Target folder not found");
+                throw new ResourceNotFoundException("Target folder not found");
             }
         }
 

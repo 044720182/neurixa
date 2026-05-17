@@ -89,6 +89,18 @@ Application starts on `http://localhost:8080`.
 ./gradlew :neurixa-core:dependencies     # Inspect core dependencies (should be empty)
 ```
 
+**Example Test Output:**
+
+```bash
+$ ./gradlew test > /dev/null 2>&1
+
+
+BUILD SUCCESSFUL in 19s
+  ✓ 20 tests finished
+  ✓ 20 tests passed
+  ✓ 0 test failures
+```
+
 ---
 
 ## 4. Verify & Test the API
@@ -103,7 +115,7 @@ curl http://localhost:8080/actuator/health
 ### Register a User
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/register \
+curl -X POST http://localhost:8080/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{"username":"john_doe","email":"john@example.com","password":"password123"}'
 ```
@@ -121,12 +133,12 @@ curl -X POST http://localhost:8080/api/auth/register \
 
 ```bash
 # Login with username
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"john_doe","password":"password123"}'
 
 # Login with email
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"john@example.com","password":"password123"}'
 ```
@@ -143,7 +155,7 @@ When running with `--spring.profiles.active=dev`, the following users are automa
 
 ```bash
 # Login as admin (username or email both work)
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'
 
@@ -165,13 +177,13 @@ neurixa:
 TOKEN="<paste token here>"
 
 curl -H "Authorization: Bearer $TOKEN" \
-     http://localhost:8080/api/users/me
+     http://localhost:8080/api/v1/users/me
 ```
 
 ### Logout
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/logout
+curl -X POST http://localhost:8080/api/v1/auth/logout
 # Stateless — the client should discard the token after this call
 ```
 

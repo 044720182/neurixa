@@ -4,32 +4,23 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class TagId implements Serializable {
-    private final UUID value;
+/**
+ * Value object for tag identity.
+ * Java 21 record — equals, hashCode, and accessor generated automatically.
+ */
+public record TagId(UUID value) implements Serializable {
 
-    public TagId(UUID value) {
-        this.value = Objects.requireNonNull(value, "TagId cannot be null.");
+    public TagId {
+        Objects.requireNonNull(value, "TagId cannot be null.");
     }
 
     public static TagId generate() {
         return new TagId(UUID.randomUUID());
     }
 
+    /** Convenience accessor matching the old getValue() call sites. */
     public UUID getValue() {
         return value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        TagId tagId = (TagId) o;
-        return value.equals(tagId.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
     }
 
     @Override

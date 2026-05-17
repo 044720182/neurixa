@@ -1,5 +1,7 @@
-// Pure domain module - NO external dependencies
+// Pure domain module - NO external framework dependencies
+// SLF4J API is a pure Java logging facade — no framework coupling
 dependencies {
+    implementation 'org.slf4j:slf4j-api:2.0.9'
     testImplementation libs.junit.jupiter
     testImplementation libs.assertj.core
     testImplementation libs.mockito.core
