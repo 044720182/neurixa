@@ -5,6 +5,9 @@ import com.neurixa.application.blog.ArticleQueryService;
 import com.neurixa.boot.dto.response.BlogArticleResponse;
 import com.neurixa.dto.response.PageResponse;
 import com.neurixa.domain.blog.Article;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,13 +35,13 @@ public class BlogArticleController {
     }
 
     @PostMapping
-    public BlogArticleResponse createArticle(@RequestBody CreateArticleRequest request) {
+    public BlogArticleResponse createArticle(@Valid @RequestBody CreateArticleRequest request) {
         Article article = articleCommandService.createDraft(request.title(), request.content(), request.excerpt());
         return BlogArticleResponse.from(article);
     }
 
     @PutMapping("/{id}")
-    public BlogArticleResponse updateArticle(@PathVariable UUID id, @RequestBody UpdateArticleRequest request) {
+    public BlogArticleResponse updateArticle(@PathVariable UUID id, @Valid @RequestBody UpdateArticleRequest request) {
         Article article = articleCommandService.update(id, request.title(), request.content(), request.excerpt());
         return BlogArticleResponse.from(article);
     }
@@ -79,6 +82,29 @@ public class BlogArticleController {
         return new PageResponse<>(items, page, size, total, totalPages, hasNext, hasPrevious);
     }
 
-    public record CreateArticleRequest(String title, String content, String excerpt) {}
-    public record UpdateArticleRequest(String title, String content, String excerpt) {}
+    public record CreateArticleRequest(
+            @NotBlank(message = "Title is required")
+            @Size(max = 500, message = "Title must not exceed 500 characters")
+            String title,
+
+            @NotBlank(message = "Content is required")
+            @Size(max = 100000, message = "Content must not exceed 100,000 characters")
+            String content,
+
+            @Size(max = 1000, message = "Excerpt must not exceed 1,000 characters")
+            String excerpt
+    ) {}
+
+    public record UpdateArticleRequest(
+            @NotBlank(message = "Title is required")
+            @Size(max = 500, message = "Title must not exceed 500 characters")
+            String title,
+
+            @NotBlank(message = "Content is required")
+            @Size(max = 100000, message = "Content must not exceed 100,000 characters")
+            String content,
+
+            @Size(max = 1000, message = "Excerpt must not exceed 1,000 characters")
+            String excerpt
+    ) {}
 }
